@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="null" pageWidth="226" pageHeight="576" columnWidth="226" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="cc7b010b-63f4-41b8-ba13-1d51997c0933">
+	<property name="ireport.zoom" value="2.2"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<queryString>
+		<![CDATA[select * from solditems;]]>
+	</queryString>
+	<field name="id" class="java.lang.Integer"/>
+	<field name="invoice_number" class="java.lang.String"/>
+	<field name="itemid" class="java.lang.String"/>
+	<field name="name" class="java.lang.String"/>
+	<field name="quantity" class="java.lang.Integer"/>
+	<field name="itemprice" class="java.lang.Float"/>
+	<field name="subtotal" class="java.lang.Float"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="69" splitType="Stretch">
+			<staticText>
+				<reportElement x="59" y="47" width="93" height="15" uuid="378c4a53-2ee2-476d-9f0c-73a5a786dd73"/>
+				<text><![CDATA[Kyegegwa District]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="26" y="14" width="162" height="19" uuid="80ccf634-5ea2-4cfb-a4f4-a08c6530639d"/>
+				<textElement>
+					<font size="14" isBold="true"/>
+				</textElement>
+				<text><![CDATA[LUCKY ELECTRICALS]]></text>
+			</staticText>
+			<line>
+				<reportElement x="0" y="61" width="216" height="1" uuid="2ce06760-7221-444c-a92f-0a700063eb14"/>
+			</line>
+			<staticText>
+				<reportElement x="26" y="36" width="152" height="11" uuid="97c6291a-6b2e-4353-90d0-0b44f420b6c5"/>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<text><![CDATA[   +256 708 756 404 | +256 773 363 090]]></text>
+			</staticText>
+		</band>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band height="26" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="0" width="23" height="20" uuid="590326a3-af63-4583-9cf1-9fa37cfac30a"/>
+				<box>
+					<topPen lineWidth="1.25" lineStyle="Dashed"/>
+					<bottomPen lineWidth="1.25" lineStyle="Dashed"/>
+				</box>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Id]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="32" y="0" width="64" height="20" uuid="55c51d46-226e-40d6-ad31-c043b09e1b4d"/>
+				<box>
+					<topPen lineWidth="1.25" lineStyle="Dashed"/>
+					<bottomPen lineWidth="1.25" lineStyle="Dashed"/>
+				</box>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[name]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="104" y="0" width="38" height="20" uuid="9ba3a228-e10f-435b-a1da-6f599f0bbe58"/>
+				<box>
+					<topPen lineWidth="1.25" lineStyle="Dashed"/>
+					<bottomPen lineWidth="1.25" lineStyle="Dashed"/>
+				</box>
+				<textElement textAlignment="Center">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Qty]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="148" y="0" width="56" height="20" uuid="6dd02d86-a4f1-4f3b-8ffa-1c84e39f55d5"/>
+				<box>
+					<topPen lineWidth="1.25" lineStyle="Dashed"/>
+					<bottomPen lineWidth="1.25" lineStyle="Dashed"/>
+				</box>
+				<textElement textAlignment="Right">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[itemprice]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="21" splitType="Stretch">
+			<textField>
+				<reportElement x="0" y="0" width="23" height="20" uuid="cfbb5182-74f6-4871-a236-56850826fb02"/>
+				<textFieldExpression><![CDATA[$F{invoice_number}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="32" y="0" width="64" height="20" uuid="509a2b89-7d76-4ae4-9de4-8039161519b2"/>
+				<textFieldExpression><![CDATA[$F{name}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="148" y="0" width="56" height="20" uuid="01118490-f7f4-478e-8460-ad6bc8f29ae8"/>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[$F{itemprice}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="104" y="0" width="38" height="20" uuid="f857c162-acc5-4dbe-af81-389eca7d4e2a"/>
+				<textElement textAlignment="Center"/>
+				<textFieldExpression><![CDATA[$F{quantity}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band height="168" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="10" width="104" height="20" uuid="8da11be0-3578-482e-b195-e13cff4fd77c"/>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Total sum                  :]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="119" y="10" width="85" height="20" uuid="762e2643-e935-4d1d-8848-b8a7462f133d"/>
+				<textElement textAlignment="Right">
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{subtotal}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="30" width="104" height="20" uuid="fcaf4044-a7ba-48ae-8b91-fb849af02f1b"/>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Customer Name       :]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="50" width="104" height="20" uuid="15c6fe4c-c4c7-4e9a-ade9-d2467edbf5e4"/>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Printed By                 :]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="135" width="204" height="20" uuid="a35983d4-c943-4615-9d93-3874f1156546"/>
+				<box>
+					<topPen lineWidth="0.75"/>
+					<leftPen lineWidth="0.75"/>
+					<bottomPen lineWidth="0.75"/>
+					<rightPen lineWidth="0.75"/>
+				</box>
+				<textElement>
+					<font isItalic="true"/>
+				</textElement>
+				<text><![CDATA[    Thank you for supporting Lucky Electricals]]></text>
+			</staticText>
+			<line>
+				<reportElement x="0" y="5" width="216" height="1" uuid="c0a171f6-c988-44b0-aa5e-44648e7b9d17"/>
+				<graphicElement>
+					<pen lineStyle="Dashed"/>
+				</graphicElement>
+			</line>
+			<image>
+				<reportElement x="66" y="71" width="70" height="64" uuid="347e5657-3f2e-4d67-85dd-acc76dfd42fb"/>
+				<imageExpression><![CDATA["/home/mrrobot/Desktop/holiday work/lucky_electricals/nexatek_point_of_sale_java/src/com/nexatek/images/Paid-PNG-Picture.png"]]></imageExpression>
+			</image>
+		</band>
+	</summary>
+</jasperReport>
