@@ -10,6 +10,7 @@ import java.awt.HeadlessException;
 import java.awt.event.KeyEvent;
 import static java.lang.Thread.sleep;
 import java.sql.*;
+import java.time.LocalDate;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
@@ -167,7 +168,7 @@ private void updateCombo(){
 // }
  public void view_receipt(){
  try{
-     JasperDesign jdesign = JRXmlLoader.load("src/reports/inidreport2.jasper");
+     JasperDesign jdesign = JRXmlLoader.load("src\\reports\\receipt2.jrxml");
 //     JasperDesign jdesign = JRXmlLoader.load("src\\reports\\receipt2.jrxml");
  String query = "select * from solditems where invoice_number = '"+invoice_no.getText()+"'";
  JRDesignQuery updateQuery = new JRDesignQuery();
@@ -865,12 +866,15 @@ if (cash == 0.0) {
 } else if (totalamount <= cash) {
     Status = "Paid";
 }
+
+LocalDate currentDate = LocalDate.now();
+
         DefaultTableModel model = (DefaultTableModel) items.getModel();
     int rowCount = model.getRowCount();
     
     // Iterate through the rows and insert data into 'solditems' table
    try {
-    String sql = "INSERT INTO solditems (invoice_number, itemId, name, quantity, itemPrice, total,customer_name, customer_phone,sold_by,time,status) VALUES (?, ?, ?, ?, ?, ?,?,?,?,?,?)";
+    String sql = "INSERT INTO solditems (invoice_number, itemId, name, quantity, itemPrice, total,customer_name, customer_phone,sold_by,time,status,selldate) VALUES (?, ?, ?, ?, ?, ?,?,?,?,?,?,?)";
     String invoiceDetailsSql = "INSERT INTO invoice_details (invoice_number) VALUES (?)";
     String customerSql="insert into customers(customer_name,phone_number,invoice_number) values(?,?,?)";
     
@@ -897,6 +901,7 @@ if (cash == 0.0) {
         pst.setString(9, counter.getText());
         pst.setString(10, time.getText());
         pst.setString(11, Status);
+        pst.setObject(12, currentDate);
         pst.executeUpdate();
     }
 view_receipt();
