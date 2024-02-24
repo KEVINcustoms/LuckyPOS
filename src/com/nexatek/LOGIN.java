@@ -132,8 +132,8 @@ PreparedStatement pst;
             if(rst.next()){                  
                 this.setVisible(false);
                  JOptionPane.showMessageDialog(null,"Welcome.."+username.getText());
-             sales_admin e = new sales_admin();
-            e.setVisible(true);               
+             counter count = new counter();
+            count.setVisible(true);               
            }
             
             /////////////////////

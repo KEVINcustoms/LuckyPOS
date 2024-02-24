@@ -180,7 +180,7 @@
             <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
               <Image iconType="3" name="/com/nexatek/images/img/customer.png"/>
             </Property>
-            <Property name="text" type="java.lang.String" value="Customers"/>
+            <Property name="text" type="java.lang.String" value="Technicians"/>
           </Properties>
           <Events>
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jToggleButton3ActionPerformed"/>

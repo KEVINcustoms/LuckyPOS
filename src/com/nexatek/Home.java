@@ -82,7 +82,7 @@ PreparedStatement pst;
         home_bnt_grp.add(jToggleButton3);
         jToggleButton3.setFont(new java.awt.Font("Cantarell", 1, 17)); // NOI18N
         jToggleButton3.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/nexatek/images/img/customer.png"))); // NOI18N
-        jToggleButton3.setText("Customers");
+        jToggleButton3.setText("Technicians");
         jToggleButton3.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jToggleButton3ActionPerformed(evt);
@@ -279,10 +279,10 @@ jpload.jPanelLoader(panel_load, sp);
     }//GEN-LAST:event_jToggleButton2ActionPerformed
 
     private void jToggleButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jToggleButton3ActionPerformed
-customer cus = new customer();
-jpload.jPanelLoader(panel_load, cus);
 
         // TODO add your handling code here:
+        technicians tech= new technicians();
+        jpload.jPanelLoader(panel_load, tech);
     }//GEN-LAST:event_jToggleButton3ActionPerformed
 
     private void jToggleButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jToggleButton4ActionPerformed
@@ -301,6 +301,8 @@ Toolkit.getDefaultToolkit().beep();
 
     private void jToggleButton6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jToggleButton6ActionPerformed
         // TODO add your handling code here:
+        invoices inv= new invoices();
+        jpload.jPanelLoader(panel_load, inv);
     }//GEN-LAST:event_jToggleButton6ActionPerformed
 
     private void jToggleButton7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jToggleButton7ActionPerformed
@@ -311,6 +313,8 @@ Toolkit.getDefaultToolkit().beep();
 
     private void jToggleButton8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jToggleButton8ActionPerformed
         // TODO add your handling code here:
+        customer cus = new customer();
+jpload.jPanelLoader(panel_load, cus);
     }//GEN-LAST:event_jToggleButton8ActionPerformed
 
     /**
