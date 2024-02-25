@@ -43,6 +43,8 @@ public class sales_admin extends javax.swing.JPanel {
  Connection conn;
  ResultSet rst;
  PreparedStatement pst;
+ PreparedStatement pstInsert;
+ PreparedStatement pstDelete;
  public Double Stcok_qty = 0.0;
  static String customer_name;
   static String telephone_number;
@@ -51,6 +53,7 @@ public class sales_admin extends javax.swing.JPanel {
      public sales_admin() {
         conn= connection.connect();
         initComponents();
+        sendOutOfStockData();
         items.getTableHeader().setFont( new Font("segoe UI", Font.BOLD,18));
         items.getTableHeader().setOpaque(true);
         items.getTableHeader().setBackground(new Color(242,242,242));
@@ -244,6 +247,85 @@ private void updateCombo(){
         };
         clock.start();
     }
+  
+   public void sendOutOfStockData() {
+    String selectQuery = "SELECT * FROM products";
+    try {
+        pst = conn.prepareStatement(selectQuery);
+        rst = pst.executeQuery();
+
+        while (rst.next()) {
+            String productid = rst.getString("productid");
+            String barcode = rst.getString("barcode");
+            String name = rst.getString("name");
+            String size = rst.getString("size");
+            String price = rst.getString("price");
+            String price2 = rst.getString("price2");
+            String price3 = rst.getString("price3");
+            String quantity = rst.getString("quantity");
+            String category = rst.getString("category");
+            String supplier_id = rst.getString("supplier_id");
+            String cost_price = rst.getString("cost_price");
+            Float qty = Float.valueOf(quantity);
+            Float prc = Float.valueOf(price);
+            Float prc2 = Float.valueOf(price2);
+            Float prc3 = Float.valueOf(price3);
+            Float costp = Float.valueOf(cost_price);
+
+            if ("0".equals(quantity)) { // Check if quantity is zero
+                try {
+                    String deleteQuery = "DELETE FROM products WHERE quantity = ?";
+                    String insertQuery = "INSERT INTO out_of_stock (barcode, name, size, price, price2, price3, quantity, category, supplier_id, cost_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+                    // Use a different PreparedStatement for the DELETE query
+                    pstDelete = conn.prepareStatement(deleteQuery);
+                    pstDelete.setFloat(1, qty);
+                    pstDelete.execute();
+JOptionPane.showMessageDialog(null, name);
+                    // Use a different PreparedStatement for the INSERT query
+                    pstInsert = conn.prepareStatement(insertQuery);
+                    pstInsert.setString(1,barcode);
+            pstInsert.setString(2,name);
+            pstInsert.setString(3,size);
+            pstInsert.setFloat(4, prc);
+            pstInsert.setFloat(5, prc2);
+            pstInsert.setFloat(6, prc3);
+            pstInsert.setInt(7, Integer.parseInt(quantity));
+            pstInsert.setString(8, category);
+            pstInsert.setInt(9,Integer.valueOf(supplier_id));
+            pstInsert.setFloat(10, costp);
+                    pstInsert.execute();
+                    
+                    JOptionPane.showMessageDialog(null, "Deleted and Inserted into out_of_stock");
+                } catch (SQLException e) {
+                    JOptionPane.showMessageDialog(null, e);
+                }
+            }
+        }
+        Update_table();
+    } catch (SQLException ex) {
+        Logger.getLogger(product.class.getName()).log(Level.SEVERE, null, ex);
+    } finally {
+        try {
+            // Close resources (result set, prepared statements) in a finally block
+            if (rst != null) {
+                rst.close();
+            }
+            if (pst != null) {
+                pst.close();
+            }
+            if (pstDelete != null) {
+                pstDelete.close();
+            }
+            if (pstInsert != null) {
+                pstInsert.close();
+            }
+        } catch (SQLException e) {
+            // Handle exceptions during closing resources
+            e.printStackTrace();
+        }
+    }
+}
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
