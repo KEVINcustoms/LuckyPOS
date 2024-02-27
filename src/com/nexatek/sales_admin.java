@@ -53,7 +53,6 @@ public class sales_admin extends javax.swing.JPanel {
      public sales_admin() {
         conn= connection.connect();
         initComponents();
-        sendOutOfStockData();
         items.getTableHeader().setFont( new Font("segoe UI", Font.BOLD,18));
         items.getTableHeader().setOpaque(true);
         items.getTableHeader().setBackground(new Color(242,242,242));
@@ -281,7 +280,6 @@ private void updateCombo(){
                     pstDelete = conn.prepareStatement(deleteQuery);
                     pstDelete.setFloat(1, qty);
                     pstDelete.execute();
-JOptionPane.showMessageDialog(null, name);
                     // Use a different PreparedStatement for the INSERT query
                     pstInsert = conn.prepareStatement(insertQuery);
                     pstInsert.setString(1,barcode);
@@ -296,7 +294,7 @@ JOptionPane.showMessageDialog(null, name);
             pstInsert.setFloat(10, costp);
                     pstInsert.execute();
                     
-                    JOptionPane.showMessageDialog(null, "Deleted and Inserted into out_of_stock");
+                    JOptionPane.showMessageDialog(null, "You have sold your last items and product is now out of stock /n KEVINcustoms is advising you to refill the stock");
                 } catch (SQLException e) {
                     JOptionPane.showMessageDialog(null, e);
                 }
@@ -979,6 +977,7 @@ LocalDate currentDate = LocalDate.now();
     }
 view_receipt();
 stkup();
+sendOutOfStockData();
     invoiceDetailsPst.executeUpdate();
     customerPst.executeUpdate();
     JOptionPane.showMessageDialog(null, "Transaction successful");

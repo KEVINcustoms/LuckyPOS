@@ -26,6 +26,7 @@ public class product extends javax.swing.JPanel {
     PreparedStatement pst;
     PreparedStatement pstDelete;
     PreparedStatement pstInsert;
+    PreparedStatement pstextra;
     public product() {
         conn= connection.connect();
         initComponents();
@@ -111,7 +112,23 @@ public class product extends javax.swing.JPanel {
     
     }
 
-
+public void updatingQuantity(){
+        DefaultTableModel t = (DefaultTableModel) products_table.getModel();
+    int i = products_table.getSelectedRow();
+//    BARCODE.setText(t.getValueAt(i, 0).toString());
+    search_bar.setText(t.getValueAt(i, 0).toString());
+    barcode.setText(t.getValueAt(i, 1).toString());
+    product_name.setText(t.getValueAt(i, 2).toString());
+    product_size.setText(t.getValueAt(i, 3).toString());
+    price.setText(t.getValueAt(i, 4).toString());
+    price2.setText(t.getValueAt(i, 5).toString());
+    price3.setText(t.getValueAt(i, 6).toString());
+//    quantity.setText(t.getValueAt(i, 7).toString());
+    category.setText(t.getValueAt(i, 8).toString());
+    supplier_id.setText(t.getValueAt(i, 9).toString());
+    cost_price.setText(t.getValueAt(i, 10).toString());
+    
+}
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -676,7 +693,7 @@ public class product extends javax.swing.JPanel {
     price.setText(t.getValueAt(i, 4).toString());
     price2.setText(t.getValueAt(i, 5).toString());
     price3.setText(t.getValueAt(i, 6).toString());
-    quantity.setText(t.getValueAt(i, 7).toString());
+//    quantity.setText(t.getValueAt(i, 7).toString());
     category.setText(t.getValueAt(i, 8).toString());
     supplier_id.setText(t.getValueAt(i, 9).toString());
     cost_price.setText(t.getValueAt(i, 10).toString());
@@ -705,29 +722,86 @@ JOptionPane.showMessageDialog(null,e);
     }//GEN-LAST:event_deleteActionPerformed
 
     private void updateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_updateActionPerformed
-        // TODO add your handling code here:
-        int id_=Integer.valueOf(search_bar.getText());
-        String qty=quantity.getText();
-        String s_id=supplier_id.getText();
-        float prc = Float.valueOf(price.getText());
-        float prc2 = Float.valueOf(price2.getText());
-        float prc3 = Float.valueOf(price3.getText());
-        float costP = Float.valueOf(cost_price.getText());
-        try{
-       String name = product_name.getText();
-       String Category = category.getText();
-       String size= product_size.getText();
-       String sql= "update products set name = '"+name+"', category ='"+Category+"',price='"+prc+"',price2='"+prc2+"',price3='"+prc3+"',quantity='"+qty+"', size='"+size+"',cost_price='"+costP+"' where productid='"+id_+"' ";          
-       pst= conn.prepareStatement(sql);
-       pst.execute();
-       JOptionPane.showMessageDialog(null,"Changes Tracked Successfully");
-      }
-      catch(Exception e){
-	JOptionPane.showMessageDialog(null,e);
-      }
+
+int id_ = Integer.valueOf(search_bar.getText());
+String qty = quantity.getText();
+float prc = Float.valueOf(price.getText());
+float prc2 = Float.valueOf(price2.getText());
+float prc3 = Float.valueOf(price3.getText());
+float costP = Float.valueOf(cost_price.getText());
+
+String name = product_name.getText();
+String Category = category.getText();
+String size = product_size.getText();
+Float total;
+
+if (qty.isEmpty()) {
+    String sql1 = "select quantity from products where productid = ?";
+    try {
+        pstInsert = conn.prepareStatement(sql1);
+        pstInsert.setInt(1, id_);
+        rst = pstInsert.executeQuery();
+        if (rst.next()) {
+            Float newqty = Float.valueOf(rst.getString("quantity"));
+            JOptionPane.showMessageDialog(null, newqty);
+                String sql = "update products set name = ?, category = ?, price = ?, price2 = ?, price3 = ?, quantity = ?, size = ?, cost_price = ? where productid = ?";
+pst = conn.prepareStatement(sql);
+        pst.setString(1, name);
+        pst.setString(2, Category);
+        pst.setFloat(3, prc);
+        pst.setFloat(4, prc2);
+        pst.setFloat(5, prc3);
+        pst.setFloat(6, newqty);
+        pst.setString(7, size);
+        pst.setFloat(8, costP);
+        pst.setInt(9, id_);
+        pst.executeUpdate();
+        JOptionPane.showMessageDialog(null, "Changes Tracked Successfully");
         Update_table();
         clear();
-                  
+        }
+    } catch (SQLException ex) {
+        Logger.getLogger(product.class.getName()).log(Level.SEVERE, null, ex);
+    }
+} else if (Integer.valueOf(qty) > 0) {
+    int qty4 = Integer.valueOf(qty);
+    total = costP * qty4;
+    String sql = "insert into sub_cost_price(product_name, sub_costp, quantity) values(?,?,?)";
+    String sql2 = "select quantity from products where productid = ?";
+    try {
+        pst = conn.prepareStatement(sql);
+        pst.setString(1, name);
+        pst.setFloat(2, total);
+        pst.setInt(3, qty4);
+        pst.executeUpdate();
+        
+        pstInsert = conn.prepareStatement(sql2);
+        pstInsert.setInt(1, id_);
+        rst = pstInsert.executeQuery();
+        if (rst.next()) {
+            Float newqty = Float.valueOf(rst.getString("quantity"));
+            Float totalqty = qty4 + newqty;
+            String sql3 = "update products set name = ?, category = ?, price = ?, price2 = ?, price3 = ?, quantity = ?, size = ?, cost_price = ? where productid = ?";
+            pstextra = conn.prepareStatement(sql3);
+        pstextra.setString(1, name);
+        pstextra.setString(2, Category);
+        pstextra.setFloat(3, prc);
+        pstextra.setFloat(4, prc2);
+        pstextra.setFloat(5, prc3);
+        pstextra.setFloat(6, totalqty);
+        pstextra.setString(7, size);
+        pstextra.setFloat(8, costP);
+        pstextra.setInt(9, id_);
+        pstextra.executeUpdate();
+            JOptionPane.showMessageDialog(null, totalqty);
+        }
+Update_table();
+        JOptionPane.showMessageDialog(null, "successfully added the sum of cost price and saved to db");
+    } catch (SQLException ex) {
+        Logger.getLogger(product.class.getName()).log(Level.SEVERE, null, ex);
+    }
+}
+
     }//GEN-LAST:event_updateActionPerformed
 
     private void view_damageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_view_damageActionPerformed

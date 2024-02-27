@@ -158,7 +158,7 @@ PreparedStatement pst;
         home_bnt_grp.add(jToggleButton10);
         jToggleButton10.setFont(new java.awt.Font("Cantarell", 1, 17)); // NOI18N
         jToggleButton10.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/nexatek/images/img/product.png"))); // NOI18N
-        jToggleButton10.setText("OUT STOCK");
+        jToggleButton10.setText("OUT OF STOCK");
         jToggleButton10.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jToggleButton10ActionPerformed(evt);
@@ -332,7 +332,8 @@ jpload.jPanelLoader(panel_load, cus);
     }//GEN-LAST:event_jToggleButton8ActionPerformed
 
     private void jToggleButton10ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jToggleButton10ActionPerformed
-        // TODO add your handling code here:
+        out_of_stock stock = new out_of_stock();
+        jpload.jPanelLoader(panel_load, stock);
     }//GEN-LAST:event_jToggleButton10ActionPerformed
 
     /**
