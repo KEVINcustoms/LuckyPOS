@@ -57,8 +57,7 @@ public class sales_admin extends javax.swing.JPanel {
         items.getTableHeader().setOpaque(true);
         items.getTableHeader().setBackground(new Color(242,242,242));
         items.getTableHeader().setForeground(new Color(0,0,255)); 
-        
-        
+                
          DefaultTableModel model = new DefaultTableModel();
         items.setModel(model);
           model.addColumn("IID");
@@ -132,6 +131,7 @@ private void updateCombo(){
         quantity.setText("");
         barcode.setText("");
         id.setText("");
+        stock_qty.setText("");
         selectcombo.removeAllItems();
     }
 
@@ -420,11 +420,11 @@ private void updateCombo(){
                         .addComponent(jLabel2)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(stock_qty, javax.swing.GroupLayout.PREFERRED_SIZE, 94, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 10, Short.MAX_VALUE)
                 .addComponent(date, javax.swing.GroupLayout.PREFERRED_SIZE, 208, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(time, javax.swing.GroupLayout.PREFERRED_SIZE, 139, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(8, Short.MAX_VALUE))
+                .addContainerGap(11, Short.MAX_VALUE))
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -945,7 +945,7 @@ LocalDate currentDate = LocalDate.now();
     
     // Iterate through the rows and insert data into 'solditems' table
    try {
-    String sql = "INSERT INTO solditems (invoice_number, itemId, name, quantity, itemPrice, total,customer_name, customer_phone,sold_by,time,status,selldate) VALUES (?, ?, ?, ?, ?, ?,?,?,?,?,?,?)";
+    String sql = "INSERT INTO solditems (invoice_number, itemId, name, quantity, itemPrice, total,customer_name, customer_phone,sold_by,time,status,selldate,paid_amount,balanc) VALUES (?, ?, ?, ?, ?, ?,?,?,?,?,?,?,?,?)";
     String invoiceDetailsSql = "INSERT INTO invoice_details (invoice_number) VALUES (?)";
     String customerSql="insert into customers(customer_name,phone_number,invoice_number) values(?,?,?)";
     
@@ -973,6 +973,8 @@ LocalDate currentDate = LocalDate.now();
         pst.setString(10, time.getText());
         pst.setString(11, Status);
         pst.setObject(12, currentDate);
+        pst.setFloat(13, cash);
+        pst.setFloat(14, Float.valueOf(change.getText()));
         pst.executeUpdate();
     }
 view_receipt();
@@ -1034,11 +1036,29 @@ sendOutOfStockData();
     }//GEN-LAST:event_itemsMouseClicked
 
     private void products_tableMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_products_tableMouseClicked
-      
+    
 try {
     selectcombo.removeAllItems();
         DefaultTableModel t = (DefaultTableModel) products_table.getModel();
-            
+        String sql = "select quantity from products";
+     try {
+         pst= conn.prepareStatement(sql);
+     } catch (SQLException ex) {
+         Logger.getLogger(sales_admin.class.getName()).log(Level.SEVERE, null, ex);
+     }
+     try {
+         rst = pst.executeQuery();
+     } catch (SQLException ex) {
+         Logger.getLogger(sales_admin.class.getName()).log(Level.SEVERE, null, ex);
+     }
+     try {
+         if(rst.next()){
+             String quantity1 = rst.getString("quantity");
+             stock_qty.setText(quantity1);
+                }   
+     } catch (SQLException ex) {
+         Logger.getLogger(sales_admin.class.getName()).log(Level.SEVERE, null, ex);
+     }    
         int i = products_table.getSelectedRow();
         id.setText(t.getValueAt(i, 0).toString());
         barcode.setText(t.getValueAt(i, 1).toString());
@@ -1046,7 +1066,6 @@ try {
         size.setText(t.getValueAt(i, 3).toString());
         price.setText(t.getValueAt(i, 4).toString());
         quantity.setText("1");
-        
         // Add the prices to the selectcombo
         selectcombo.removeAllItems();
         selectcombo.addItem(t.getValueAt(i, 4).toString()); // price

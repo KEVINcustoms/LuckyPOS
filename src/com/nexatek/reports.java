@@ -39,7 +39,7 @@ Connection conn;
      */
      public void view_receipt() {
     try {
-        JasperDesign jdesign = JRXmlLoader.load("src\\reports\\inidreport.jrxml");
+        JasperDesign jdesign = JRXmlLoader.load("src\\reports\\solditemsrepo.jrxml");
         String query = "select * from solditems where invoice_number = '" + invoice.getText() + "'";
         JRDesignQuery updateQuery = new JRDesignQuery();
         updateQuery.setText(query);
@@ -169,7 +169,7 @@ Connection conn;
     private void view_allActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_view_allActionPerformed
         // TODO add your handling code here:
         try {
-        JasperDesign jdesign = JRXmlLoader.load("src\\reports\\inidreport.jrxml");
+        JasperDesign jdesign = JRXmlLoader.load("src\\reports\\solditemsrepo.jrxml");
         String query = "select * from solditems";
         JRDesignQuery updateQuery = new JRDesignQuery();
         updateQuery.setText(query);

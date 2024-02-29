@@ -3,7 +3,7 @@
 	<property name="ireport.zoom" value="2.0"/>
 	<property name="ireport.x" value="0"/>
 	<property name="ireport.y" value="0"/>
-	<queryString language="SQL">
+	<queryString>
 		<![CDATA[select * from solditems;]]>
 	</queryString>
 	<field name="id" class="java.lang.Integer"/>
@@ -18,6 +18,9 @@
 	<field name="sold_by" class="java.lang.String"/>
 	<field name="time" class="java.lang.String"/>
 	<field name="status" class="java.lang.String"/>
+	<field name="selldate" class="java.sql.Date"/>
+	<field name="paid_amount" class="java.lang.Float"/>
+	<field name="balanc" class="java.lang.Float"/>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
@@ -34,9 +37,6 @@
 				</textElement>
 				<text><![CDATA[   +256 704 402 234 | +256 781 417 177]]></text>
 			</staticText>
-			<line>
-				<reportElement x="1" y="63" width="216" height="1" uuid="60c41ebc-1c27-4a39-8141-4bde6405fed5"/>
-			</line>
 			<staticText>
 				<reportElement x="28" y="11" width="162" height="19" uuid="f55aeb0a-455b-43d6-b499-283961453f0c"/>
 				<textElement>
@@ -126,33 +126,33 @@
 		<band splitType="Stretch"/>
 	</pageFooter>
 	<summary>
-		<band height="181" splitType="Stretch">
+		<band height="170" splitType="Stretch">
 			<staticText>
-				<reportElement x="1" y="31" width="104" height="20" uuid="044ea9cb-fe4c-40a2-91d2-a70a8234597d"/>
+				<reportElement x="1" y="52" width="104" height="20" uuid="044ea9cb-fe4c-40a2-91d2-a70a8234597d"/>
 				<textElement>
 					<font isBold="true"/>
 				</textElement>
-				<text><![CDATA[Customer Name       :]]></text>
+				<text><![CDATA[Customer Name        :]]></text>
 			</staticText>
 			<textField>
-				<reportElement x="105" y="31" width="100" height="20" uuid="b7d01b37-b5c5-4eb6-b814-3a9c3061e737"/>
+				<reportElement x="105" y="52" width="100" height="20" uuid="b7d01b37-b5c5-4eb6-b814-3a9c3061e737"/>
 				<textElement textAlignment="Right"/>
 				<textFieldExpression><![CDATA[$F{customer_name}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="105" y="51" width="100" height="20" uuid="905f6d01-aadf-4ab2-b5c5-13ff107e4e67"/>
+				<reportElement x="105" y="72" width="100" height="20" uuid="905f6d01-aadf-4ab2-b5c5-13ff107e4e67"/>
 				<textElement textAlignment="Right"/>
 				<textFieldExpression><![CDATA[$F{sold_by}]]></textFieldExpression>
 			</textField>
 			<staticText>
-				<reportElement x="1" y="51" width="104" height="20" uuid="fac5cd6c-e666-42e0-b8cf-d76a1d72b9d6"/>
+				<reportElement x="1" y="72" width="104" height="20" uuid="fac5cd6c-e666-42e0-b8cf-d76a1d72b9d6"/>
 				<textElement>
 					<font isBold="true"/>
 				</textElement>
-				<text><![CDATA[Printed By                :]]></text>
+				<text><![CDATA[Printed By                 :]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="1" y="156" width="204" height="20" uuid="b2e8bd6a-474c-4aa9-8859-b0ae8fca30d7"/>
+				<reportElement x="1" y="147" width="204" height="20" uuid="b2e8bd6a-474c-4aa9-8859-b0ae8fca30d7"/>
 				<box>
 					<topPen lineWidth="0.75"/>
 					<leftPen lineWidth="0.75"/>
@@ -165,11 +165,11 @@
 				<text><![CDATA[   Thank you for supporting Lucky Electricals]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="1" y="71" width="104" height="20" uuid="0adae4c9-7aa2-4330-b89a-ff736f846d45"/>
+				<reportElement x="1" y="92" width="104" height="20" uuid="0adae4c9-7aa2-4330-b89a-ff736f846d45"/>
 				<textElement>
 					<font isBold="true"/>
 				</textElement>
-				<text><![CDATA[Date                         :]]></text>
+				<text><![CDATA[Date                          :]]></text>
 			</staticText>
 			<staticText>
 				<reportElement x="1" y="11" width="104" height="20" uuid="2b782046-67f0-4bdd-aee1-ed9e6aa2fb7e"/>
@@ -179,7 +179,7 @@
 				<text><![CDATA[Total sum                 :]]></text>
 			</staticText>
 			<textField pattern="dd/MM/yyyy">
-				<reportElement x="105" y="71" width="100" height="20" uuid="04df1f91-a711-4320-a6b7-1e8fae735cd6"/>
+				<reportElement x="105" y="92" width="100" height="20" uuid="04df1f91-a711-4320-a6b7-1e8fae735cd6"/>
 				<textElement textAlignment="Right"/>
 				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
 			</textField>
@@ -196,10 +196,27 @@
 					<pen lineStyle="Dashed"/>
 				</graphicElement>
 			</line>
-			<image>
-				<reportElement x="71" y="91" width="65" height="65" uuid="d9f561c9-4f54-48d0-a0e3-ae428328d4cf"/>
-				<imageExpression><![CDATA["C:\\Users\\KEVINcustoms\\Desktop\\lucky_electricals\\nexatek_point_of_sale_java\\src\\com\\nexatek\\images\\Paid-PNG-Picture.png"]]></imageExpression>
-			</image>
+			<textField>
+				<reportElement x="62" y="114" width="119" height="32" uuid="7dcce91e-171d-4400-bcc4-5c1bea178ae1"/>
+				<textElement>
+					<font size="24" isBold="true" isItalic="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{status}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="105" y="32" width="100" height="20" uuid="10ed37d6-f578-4016-be26-57a18d4071ea"/>
+				<textElement textAlignment="Right">
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{balanc}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="1" y="32" width="104" height="20" uuid="65071601-d1f3-4f90-a051-82f371aad88d"/>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[STANDING BALANCE]]></text>
+			</staticText>
 		</band>
 	</summary>
 </jasperReport>

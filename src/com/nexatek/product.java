@@ -27,6 +27,7 @@ public class product extends javax.swing.JPanel {
     PreparedStatement pstDelete;
     PreparedStatement pstInsert;
     PreparedStatement pstextra;
+    PreparedStatement pstextra_extra;
     public product() {
         conn= connection.connect();
         initComponents();
@@ -737,6 +738,33 @@ Float total;
 
 if (qty.isEmpty()) {
     String sql1 = "select quantity from products where productid = ?";
+    String sql3 = "select quantity,sub_costp from sub_cost_price where product_name = ?";
+    String sql4 = "update sub_cost_price set sub_costp = ? where product_name = ?";
+    try {
+        // here am trying to update the total cost if really needed by ma boss
+        pstextra = conn.prepareStatement(sql3);
+        pstextra.setString(1, name);
+        rst = pstextra.executeQuery();
+        if(rst.next()){
+        int quant = Integer.valueOf(rst.getString("quantity"));
+        float unitcost = Float.valueOf(cost_price.getText());
+        float totalcost = quant * unitcost;
+        
+        pstextra_extra = conn.prepareStatement(sql4);
+        pstextra_extra.setFloat(1, totalcost);
+        pstextra_extra.setString(2, name);
+        pstextra_extra.executeUpdate();
+        
+        }
+        JOptionPane.showMessageDialog(null, "updated the cost price too from"+rst.getString("sub_costp"));
+    } catch (SQLException ex) {
+        Logger.getLogger(product.class.getName()).log(Level.SEVERE, null, ex);
+    }
+//    try {
+//        pstextra.setString(1, name);
+//    } catch (SQLException ex) {
+//        Logger.getLogger(product.class.getName()).log(Level.SEVERE, null, ex);
+//    }
     try {
         pstInsert = conn.prepareStatement(sql1);
         pstInsert.setInt(1, id_);

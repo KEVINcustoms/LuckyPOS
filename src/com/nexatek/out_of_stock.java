@@ -293,6 +293,7 @@ PreparedStatement pstInsert2;
             
             
             JOptionPane.showMessageDialog(null, "products added to stock successfully");
+            Update_table();
             }
             
         } catch (Exception e) {
@@ -306,7 +307,7 @@ PreparedStatement pstInsert2;
 
         try {
             // Construct the SQL query for searching
-            String sql = "SELECT * FROM products WHERE barcode LIKE ? OR name LIKE ? OR category LIKE ?";
+            String sql = "SELECT * FROM out_of_stock WHERE barcode LIKE ? OR name LIKE ? OR category LIKE ?";
             pst = conn.prepareStatement(sql);
 
             // Set the parameters for the prepared statement

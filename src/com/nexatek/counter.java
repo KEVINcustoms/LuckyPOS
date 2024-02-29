@@ -1,31 +1,92 @@
 package com.nexatek;
 
 
+import static com.nexatek.sales_admin.cash;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.event.KeyEvent;
+import static java.lang.Thread.sleep;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.time.LocalDate;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 import net.proteanit.sql.DbUtils;
+import net.sf.jasperreports.engine.JRException;
+import net.sf.jasperreports.engine.JasperCompileManager;
+import net.sf.jasperreports.engine.JasperFillManager;
+import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.engine.JasperReport;
+import net.sf.jasperreports.engine.design.JRDesignQuery;
+import net.sf.jasperreports.engine.design.JasperDesign;
+import net.sf.jasperreports.engine.xml.JRXmlLoader;
+import net.sf.jasperreports.view.JasperViewer;
 
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
  */
 
-/**
- *
- * @author engmartin
- */
 public class counter extends javax.swing.JFrame {
 ResultSet rst;
     Connection conn;
-    PreparedStatement pst;
+    PreparedStatement pst; 
+    PreparedStatement pstInsert;
+ PreparedStatement pstDelete;
+ public Double Stcok_qty = 0.0;
+ static String customer_name;
+  static String telephone_number;
+  static Float cash;
     public counter() {
+        conn=connection.connect();
         initComponents();
+        
+        items.getTableHeader().setFont( new Font("segoe UI", Font.BOLD,18));
+        items.getTableHeader().setOpaque(true);
+        items.getTableHeader().setBackground(new Color(242,242,242));
+        items.getTableHeader().setForeground(new Color(0,0,255)); 
+                
+         DefaultTableModel model = new DefaultTableModel();
+        items.setModel(model);
+          model.addColumn("IID");
+        model.addColumn("BARCODE");
+        model.addColumn("NAME");
+        model.addColumn("QUANTITY");
+        model.addColumn("UNIT-PRICE");
+        model.addColumn("SUB-TOTAL");
+        
+        currentdate();
+        sendOutOfStockData();
+        InvoiceNumbers();   
+        Update_table();
     }
 
+    private void  Update_table(){
+        try{
+    String sql = "select * from products";
+    pst = conn.prepareStatement(sql);
+    rst = pst.executeQuery();
+    products_table.setModel(DbUtils.resultSetToTableModel(rst));
+    }
+    catch(Exception e){
+        JOptionPane.showMessageDialog(null, e);
+    }
+    finally{
+        try{
+          
+        }catch(Exception ex){
+            JOptionPane.showMessageDialog(null, ex);
+        }
+    }
+   }
     public void InvoiceNumbers() {
         String sql = "SELECT MAX(invoice_number) FROM solditems"; // Replace 'your_table_name' with the actual table name
 
@@ -70,6 +131,36 @@ private void updateCombo(){
         selectcombo.removeAllItems();
     }
 
+ public void currentdate() {
+
+        Thread clock = new Thread() {
+            
+            public void run() {
+                for (;;) {
+                    Calendar cal = new GregorianCalendar();
+                    int month = cal.get(Calendar.MONTH);
+                    int year = cal.get(Calendar.YEAR);
+                    int day = cal.get(Calendar.DAY_OF_MONTH);
+                    date.setText(" "+year + "/" + (month + 1) + "/" + day);
+
+                    //time
+                    int second = cal.get(Calendar.SECOND);
+                    int minute = cal.get(Calendar.MINUTE);
+                    int hour = cal.get(Calendar.HOUR);
+                    time.setText(" "+"0" + hour + ":" + (minute) + ":" + second);
+                    //TIME.setEditable(false);
+                    //DATE.setEditable(false);
+                    try {
+                        sleep(1000);
+                    } catch (InterruptedException ex) {
+                        java.util.logging.Logger.getLogger(LOGIN.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+                    } 
+                }
+            }
+        };
+        clock.start();
+    }
+ 
 // calculating the Grand total
  public double calculateTotal() {
     double total = 0.0;
@@ -92,6 +183,144 @@ private void updateCombo(){
     }
 
     return total;
+}
+ 
+  public void view_receipt() {
+    try {
+        JasperDesign jdesign = JRXmlLoader.load("src\\reports\\receipt2.jrxml");
+        String query = "select * from solditems where invoice_number = '" + invoice_no.getText() + "'";
+        JRDesignQuery updateQuery = new JRDesignQuery();
+        updateQuery.setText(query);
+        jdesign.setQuery(updateQuery);
+
+        JasperReport jreport = JasperCompileManager.compileReport(jdesign);
+        JasperPrint jprint = JasperFillManager.fillReport(jreport, null, conn);
+
+        // Create a separate JFrame for JasperViewer
+        JFrame frame = new JFrame("KEVINcustoms Receipt Viewer");
+        
+        // Set the default close operation to DISPOSE_ON_CLOSE
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+        // Create and show the JasperViewer within the JFrame
+        JasperViewer viewer = new JasperViewer(jprint, false);
+        frame.getContentPane().add(viewer.getContentPane());
+        frame.setSize(900, 700); // Set the size according to your preference
+        frame.setLocationRelativeTo(null); // Center the frame on the screen
+        frame.setVisible(true);
+
+    } catch (JRException ex) {
+        Logger.getLogger(sales_admin.class.getName()).log(Level.SEVERE, null, ex);
+    }
+}
+ public void stkup(){
+ //get all table products id and sell quantity
+ DefaultTableModel dt = (DefaultTableModel) items.getModel();
+ int rc = dt.getRowCount();
+ for(int i = 0; i<rc; i++){
+ String bcode = dt.getValueAt(i, 1).toString(); //barcode
+ String sell_qty = dt.getValueAt(i, 3).toString();//quantity
+     try {
+         Statement s = connection.connect().createStatement();
+         ResultSet rs = s.executeQuery("select quantity from products where barcode = '"+bcode+"'");
+         if(rs.next()){
+         Stcok_qty = Double.valueOf(rs.getString("quantity"));
+         }
+     } catch (SQLException e) {
+         System.out.println(e);
+     }
+     Double st_qty = Stcok_qty;
+     Double sel_qty = Double.valueOf(sell_qty);
+     Double new_qty = st_qty - sel_qty;
+     String nqty = String.valueOf(new_qty);
+     try{
+     Statement ss = connection.connect().createStatement();
+     ss.executeUpdate("update products set quantity = '"+nqty+"' where barcode = '"+bcode+"'");
+     }
+     catch(Exception e){
+         System.out.println(e);
+     }
+     
+ }
+ 
+ }
+  public void sendOutOfStockData() {
+    String selectQuery = "SELECT * FROM products";
+    try {
+        pst = conn.prepareStatement(selectQuery);
+        rst = pst.executeQuery();
+
+        while (rst.next()) {
+            String productid = rst.getString("productid");
+            String barcode = rst.getString("barcode");
+            String name = rst.getString("name");
+            String size = rst.getString("size");
+            String price = rst.getString("price");
+            String price2 = rst.getString("price2");
+            String price3 = rst.getString("price3");
+            String quantity = rst.getString("quantity");
+            String category = rst.getString("category");
+            String supplier_id = rst.getString("supplier_id");
+            String cost_price = rst.getString("cost_price");
+            Float qty = Float.valueOf(quantity);
+            Float prc = Float.valueOf(price);
+            Float prc2 = Float.valueOf(price2);
+            Float prc3 = Float.valueOf(price3);
+            Float costp = Float.valueOf(cost_price);
+
+            if ("0".equals(quantity)) { // Check if quantity is zero
+                try {
+                    String deleteQuery = "DELETE FROM products WHERE quantity = ?";
+                    String insertQuery = "INSERT INTO out_of_stock (barcode, name, size, price, price2, price3, quantity, category, supplier_id, cost_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+                    // Use a different PreparedStatement for the DELETE query
+                    pstDelete = conn.prepareStatement(deleteQuery);
+                    pstDelete.setFloat(1, qty);
+                    pstDelete.execute();
+JOptionPane.showMessageDialog(null, name);
+                    // Use a different PreparedStatement for the INSERT query
+                    pstInsert = conn.prepareStatement(insertQuery);
+                    pstInsert.setString(1,barcode);
+            pstInsert.setString(2,name);
+            pstInsert.setString(3,size);
+            pstInsert.setFloat(4, prc);
+            pstInsert.setFloat(5, prc2);
+            pstInsert.setFloat(6, prc3);
+            pstInsert.setInt(7, Integer.parseInt(quantity));
+            pstInsert.setString(8, category);
+            pstInsert.setInt(9,Integer.valueOf(supplier_id));
+            pstInsert.setFloat(10, costp);
+                    pstInsert.execute();
+                    
+                    JOptionPane.showMessageDialog(null, "Deleted and Inserted into out_of_stock");
+                } catch (SQLException e) {
+                    JOptionPane.showMessageDialog(null, e);
+                }
+            }
+        }
+        Update_table();
+    } catch (SQLException ex) {
+        Logger.getLogger(product.class.getName()).log(Level.SEVERE, null, ex);
+    } finally {
+        try {
+            // Close resources (result set, prepared statements) in a finally block
+            if (rst != null) {
+                rst.close();
+            }
+            if (pst != null) {
+                pst.close();
+            }
+            if (pstDelete != null) {
+                pstDelete.close();
+            }
+            if (pstInsert != null) {
+                pstInsert.close();
+            }
+        } catch (SQLException e) {
+            // Handle exceptions during closing resources
+            e.printStackTrace();
+        }
+    }
 }
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -125,13 +354,11 @@ private void updateCombo(){
         quantity = new javax.swing.JTextField();
         jLabel7 = new javax.swing.JLabel();
         id = new javax.swing.JTextField();
-        jButton1 = new javax.swing.JButton();
+        view = new javax.swing.JButton();
         view_all = new javax.swing.JButton();
         add_to_cart = new javax.swing.JButton();
         removeall = new javax.swing.JButton();
-        jLabel9 = new javax.swing.JLabel();
         remove = new javax.swing.JButton();
-        paid_amount = new javax.swing.JTextField();
         finish = new javax.swing.JButton();
         jPanel7 = new javax.swing.JPanel();
         jLabel10 = new javax.swing.JLabel();
@@ -140,8 +367,16 @@ private void updateCombo(){
         change = new javax.swing.JTextField();
         jPanel5 = new javax.swing.JPanel();
         jLabel8 = new javax.swing.JLabel();
+        cashpaid = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        addInputMethodListener(new java.awt.event.InputMethodListener() {
+            public void caretPositionChanged(java.awt.event.InputMethodEvent evt) {
+                formCaretPositionChanged(evt);
+            }
+            public void inputMethodTextChanged(java.awt.event.InputMethodEvent evt) {
+            }
+        });
 
         jPanel2.setBorder(javax.swing.BorderFactory.createEtchedBorder());
 
@@ -190,16 +425,17 @@ private void updateCombo(){
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addComponent(jLabel2)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(stock_qty, javax.swing.GroupLayout.PREFERRED_SIZE, 94, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(stock_qty, javax.swing.GroupLayout.PREFERRED_SIZE, 94, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 0, Short.MAX_VALUE))
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addComponent(selectcombo, javax.swing.GroupLayout.PREFERRED_SIZE, 237, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
                         .addComponent(counter, javax.swing.GroupLayout.PREFERRED_SIZE, 203, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(32, 32, 32)
                         .addComponent(date, javax.swing.GroupLayout.PREFERRED_SIZE, 208, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(30, 30, 30)
-                        .addComponent(time, javax.swing.GroupLayout.PREFERRED_SIZE, 179, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(time, javax.swing.GroupLayout.PREFERRED_SIZE, 139, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap())
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -217,8 +453,9 @@ private void updateCombo(){
                             .addGroup(jPanel2Layout.createSequentialGroup()
                                 .addGap(4, 4, 4)
                                 .addComponent(selectcombo))
-                            .addComponent(time)
-                            .addComponent(date))
+                            .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(date)
+                                .addComponent(time)))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)))
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(stock_qty, javax.swing.GroupLayout.DEFAULT_SIZE, 26, Short.MAX_VALUE)
@@ -277,7 +514,7 @@ private void updateCombo(){
         jPanel6Layout.setHorizontalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel6Layout.createSequentialGroup()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 1271, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 1254, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(0, 0, Short.MAX_VALUE))
         );
         jPanel6Layout.setVerticalGroup(
@@ -319,9 +556,6 @@ private void updateCombo(){
         barcode.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyPressed(java.awt.event.KeyEvent evt) {
                 barcodeKeyPressed(evt);
-            }
-            public void keyReleased(java.awt.event.KeyEvent evt) {
-                barcodeKeyReleased(evt);
             }
             public void keyTyped(java.awt.event.KeyEvent evt) {
                 barcodeKeyTyped(evt);
@@ -371,15 +605,13 @@ private void updateCombo(){
                         .addGap(31, 31, 31)
                         .addComponent(name, javax.swing.GroupLayout.PREFERRED_SIZE, 229, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addGap(18, 18, Short.MAX_VALUE)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel7)
+                    .addComponent(jLabel6))
+                .addGap(18, 18, 18)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addGroup(jPanel3Layout.createSequentialGroup()
-                        .addComponent(jLabel6)
-                        .addGap(36, 36, 36)
-                        .addComponent(quantity, javax.swing.GroupLayout.PREFERRED_SIZE, 211, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanel3Layout.createSequentialGroup()
-                        .addComponent(jLabel7)
-                        .addGap(18, 18, 18)
-                        .addComponent(id)))
+                    .addComponent(quantity)
+                    .addComponent(id, javax.swing.GroupLayout.DEFAULT_SIZE, 216, Short.MAX_VALUE))
                 .addContainerGap())
         );
         jPanel3Layout.setVerticalGroup(
@@ -415,27 +647,37 @@ private void updateCombo(){
                                     .addComponent(jLabel12)))))))
         );
 
-        jButton1.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
-        jButton1.setText("View");
+        view.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
+        view.setText("View");
+        view.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                viewActionPerformed(evt);
+            }
+        });
 
         view_all.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
         view_all.setText("View All Sales");
+        view_all.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                view_allActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jPanel6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel4Layout.createSequentialGroup()
                         .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGap(43, 43, 43)
                         .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(jButton1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(view_all, javax.swing.GroupLayout.DEFAULT_SIZE, 188, Short.MAX_VALUE))))
-                .addGap(14, 14, 14))
-            .addComponent(jPanel6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(view, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(view_all, javax.swing.GroupLayout.PREFERRED_SIZE, 188, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 1255, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(0, 0, Short.MAX_VALUE))
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -443,7 +685,7 @@ private void updateCombo(){
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(jPanel4Layout.createSequentialGroup()
-                        .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(view, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
                         .addComponent(view_all, javax.swing.GroupLayout.PREFERRED_SIZE, 51, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -475,9 +717,6 @@ private void updateCombo(){
             }
         });
 
-        jLabel9.setFont(new java.awt.Font("Cantarell", 1, 18)); // NOI18N
-        jLabel9.setText("Paid Amount");
-
         remove.setBackground(new java.awt.Color(255, 51, 102));
         remove.setFont(new java.awt.Font("Cantarell", 1, 18)); // NOI18N
         remove.setForeground(new java.awt.Color(255, 255, 255));
@@ -486,20 +725,6 @@ private void updateCombo(){
         remove.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 removeActionPerformed(evt);
-            }
-        });
-
-        paid_amount.setFont(new java.awt.Font("Cantarell", 1, 24)); // NOI18N
-        paid_amount.setText("0");
-        paid_amount.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(0, 0, 0), 1, true));
-        paid_amount.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                paid_amountActionPerformed(evt);
-            }
-        });
-        paid_amount.addKeyListener(new java.awt.event.KeyAdapter() {
-            public void keyTyped(java.awt.event.KeyEvent evt) {
-                paid_amountKeyTyped(evt);
             }
         });
 
@@ -545,7 +770,7 @@ private void updateCombo(){
         jPanel7Layout.setHorizontalGroup(
             jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel7Layout.createSequentialGroup()
-                .addContainerGap(32, Short.MAX_VALUE)
+                .addContainerGap(36, Short.MAX_VALUE)
                 .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel10)
                     .addComponent(jLabel11, javax.swing.GroupLayout.PREFERRED_SIZE, 113, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -553,7 +778,7 @@ private void updateCombo(){
                 .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(total_amount)
                     .addComponent(change, javax.swing.GroupLayout.PREFERRED_SIZE, 207, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap())
+                .addGap(15, 15, 15))
         );
         jPanel7Layout.setVerticalGroup(
             jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -580,40 +805,49 @@ private void updateCombo(){
         jPanel5.setLayout(jPanel5Layout);
         jPanel5Layout.setHorizontalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel5Layout.createSequentialGroup()
-                .addComponent(jLabel8, javax.swing.GroupLayout.PREFERRED_SIZE, 1286, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 0, Short.MAX_VALUE))
+            .addComponent(jLabel8, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         jPanel5Layout.setVerticalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(jLabel8, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 77, Short.MAX_VALUE)
         );
 
+        cashpaid.setBackground(new java.awt.Color(0, 153, 255));
+        cashpaid.setFont(new java.awt.Font("Cantarell", 1, 18)); // NOI18N
+        cashpaid.setText("       Paid Amount");
+        cashpaid.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(0, 102, 0), 2, true));
+        cashpaid.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                cashpaidMouseClicked(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addGroup(layout.createSequentialGroup()
-                .addGap(12, 12, 12)
-                .addComponent(add_to_cart, javax.swing.GroupLayout.PREFERRED_SIZE, 138, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(29, 29, 29)
-                .addComponent(remove, javax.swing.GroupLayout.PREFERRED_SIZE, 138, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(31, 31, 31)
-                .addComponent(removeall, javax.swing.GroupLayout.PREFERRED_SIZE, 138, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(jLabel9, javax.swing.GroupLayout.PREFERRED_SIZE, 116, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(finish, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(paid_amount, javax.swing.GroupLayout.PREFERRED_SIZE, 226, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jPanel7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18))
-            .addGroup(layout.createSequentialGroup()
-                .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 3, Short.MAX_VALUE))
-            .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addGap(0, 0, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                    .addComponent(jPanel2, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                                .addGap(565, 565, 565)
+                                .addComponent(finish, javax.swing.GroupLayout.PREFERRED_SIZE, 226, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                                .addComponent(add_to_cart, javax.swing.GroupLayout.PREFERRED_SIZE, 138, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(29, 29, 29)
+                                .addComponent(remove, javax.swing.GroupLayout.PREFERRED_SIZE, 138, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(31, 31, 31)
+                                .addComponent(removeall, javax.swing.GroupLayout.PREFERRED_SIZE, 138, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(82, 82, 82)
+                                .addComponent(cashpaid, javax.swing.GroupLayout.PREFERRED_SIZE, 229, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGap(62, 62, 62)
+                        .addComponent(jPanel7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jPanel4, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jPanel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -624,21 +858,17 @@ private void updateCombo(){
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(remove, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(removeall, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(add_to_cart, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(119, 119, 119))
-                    .addComponent(jPanel7, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel9, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(paid_amount))
+                            .addComponent(add_to_cart, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(cashpaid, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addGap(18, 18, 18)
-                        .addComponent(finish, javax.swing.GroupLayout.PREFERRED_SIZE, 97, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addComponent(finish, javax.swing.GroupLayout.PREFERRED_SIZE, 97, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jPanel7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(12, Short.MAX_VALUE))
         );
 
         pack();
@@ -671,127 +901,51 @@ private void updateCombo(){
         // TODO add your handling code here:
         String searchCriteria = name.getText().trim().toLowerCase();
 
-        try {
-            // Construct the SQL query for searching
-            String sql = "SELECT * FROM products WHERE name LIKE ?";
-            pst = conn.prepareStatement(sql);
-            // Set the parameters for the prepared statement
-            pst.setString(1, "%" + searchCriteria + "%"); // Using "%" for partial matches
-            rst = pst.executeQuery();
+    try {
+    // Construct the SQL query for searching
+    String sql = "SELECT * FROM products WHERE name LIKE ?";
+    pst = conn.prepareStatement(sql);
+    // Set the parameters for the prepared statement
+    pst.setString(1, "%" + searchCriteria + "%"); // Using "%" for partial matches
+    rst = pst.executeQuery();       
 
-            if (rst.next()) {
-                // Retrieve specific data from the first row
-                String size_ = rst.getString("size");
-                String id_ = rst.getString("productid");
-                String bar_code = rst.getString("barcode");
-
-                // Display the retrieved data in the text fields
-                quantity.setText("1");
-                size.setText(size_);
-                barcode.setText(bar_code);
-                id.setText(id_);
-
-                // Populate the JTable with the entire ResultSet
-
-                if (name.getText().equals(rst.getString("name"))) {
-                    selectcombo.addItem(rst.getString("price"));
-                    selectcombo.addItem(rst.getString("price2"));
-                    selectcombo.addItem(rst.getString("price3"));
-                }
-                products_table.setModel(DbUtils.resultSetToTableModel(rst));
-            } else {
-                String pname = name.getText();
-                JOptionPane.showMessageDialog(null, "No product named " + pname);
-            }
-
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(null, e);
-        } finally {
-            // Close the ResultSet and PreparedStatement in a finally block
-            try {
-                if (rst != null) {
-                    rst.close();
-                }
-                if (pst != null) {
-                    pst.close();
-                }
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            }
-        }
+       products_table.setModel(DbUtils.resultSetToTableModel(rst));
+    
+    
+} catch (SQLException e) {
+    JOptionPane.showMessageDialog(null, e);
+} 
+  
 
     }//GEN-LAST:event_nameKeyTyped
 
-    private void barcodeKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_barcodeKeyPressed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_barcodeKeyPressed
-
-    private void barcodeKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_barcodeKeyReleased
-        // TODO add your handling code here:
-    }//GEN-LAST:event_barcodeKeyReleased
-
     private void barcodeKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_barcodeKeyTyped
         // TODO add your handling code here:
-        String searchCriteria = barcode.getText().trim();
 
-        try {
-            // Construct the SQL query for searching
-            String sql = "SELECT * FROM products WHERE barcode LIKE ?";
-            pst = conn.prepareStatement(sql);
-            pst.setString(1, "%" + searchCriteria + "%"); // Using "%" for partial matches
-            // Execute the query
-            rst = pst.executeQuery();
-            if (rst.next()) {
-                String price_ = rst.getString("price");
-                String retrievedName = rst.getString("name");
-                String size_ = rst.getString("size");
-                String id_ = rst.getString("productid");
-                String br_code = rst.getString("barcode");
-
-                // Display the retrieved data in the text fields
-                quantity.setText("1");
-                price.setText(price_);
-                name.setText(retrievedName);
-                size.setText(size_);
-                id.setText(id_);
-                if(barcode.getText().equals(br_code)){
-                    selectcombo.addItem(rst.getString("price"));
-                    selectcombo.addItem(rst.getString("price2"));
-                    selectcombo.addItem(rst.getString("price3"));
-                }
-            } else
-            {
-                JOptionPane.showMessageDialog(null, "No matching records found.");
-
-            }
-
-            // Update the JTable
-            products_table.setModel(DbUtils.resultSetToTableModel(rst));
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(null, e);
-        }
+        
     }//GEN-LAST:event_barcodeKeyTyped
 
     private void quantityKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_quantityKeyTyped
-        // TODO add your handling code here:
-          try{
-
-            Float qty;
-            if(quantity.getText()==""){
-                qty=0f;
-            }
-            else{
-                Float price_=Float.valueOf(price.getText());
-                qty=Float.valueOf(quantity.getText());
-                Float amnt= qty * price_;
-                String amount=String.valueOf(amnt);
-                total_amount.setText(amount);
-            }
+        // TODO add your handling code here:    
+       /*  try{
+        
+        Float qty;
+        if(quantity.getText()==""){
+            qty=0f;
+        }
+        else{
+            Float price_=Float.valueOf(price.getText());
+            qty=Float.valueOf(quantity.getText());
+            Float amnt= qty * price_;
+            String amount=String.valueOf(amnt);
+            total_amount.setText(amount);
+        }
         }
         catch(Exception e){
             JOptionPane.showMessageDialog(null, e);
+    }                                 
+   */
     }//GEN-LAST:event_quantityKeyTyped
-    }
     private void total_amountActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_total_amountActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_total_amountActionPerformed
@@ -801,23 +955,46 @@ private void updateCombo(){
     }//GEN-LAST:event_changeActionPerformed
 
     private void products_tableMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_products_tableMouseClicked
-        // TODO add your handling code here:
-        try {
-            DefaultTableModel t = (DefaultTableModel) products_table.getModel();
-
-            int i = products_table.getSelectedRow();
-            id.setText(t.getValueAt(i, 0).toString());
-            barcode.setText(t.getValueAt(i, 1).toString());
-            name.setText(t.getValueAt(i, 2).toString());
-            size.setText(t.getValueAt(i, 3).toString());
-            price.setText(t.getValueAt(i, 4).toString());
-            quantity.setText(t.getValueAt(i, 5).toString());
-            //            category.setText(t.getValueAt(i, 6).toString());
-            //            search_bar.setText(t.getValueAt(i, 0).toString());
-
-            //            supplier_id.setText(t.getValueAt(i, 7).toString());
-        } catch (Exception e) {
-        }
+        // TODO add your handling code here:             
+      
+try {
+    selectcombo.removeAllItems();
+        DefaultTableModel t = (DefaultTableModel) products_table.getModel();
+        String sql = "select quantity from products";
+     try {
+         pst= conn.prepareStatement(sql);
+     } catch (SQLException ex) {
+         Logger.getLogger(sales_admin.class.getName()).log(Level.SEVERE, null, ex);
+     }
+     try {
+         rst = pst.executeQuery();
+     } catch (SQLException ex) {
+         Logger.getLogger(sales_admin.class.getName()).log(Level.SEVERE, null, ex);
+     }
+     try {
+         if(rst.next()){
+             String quantity1 = rst.getString("quantity");
+             stock_qty.setText(quantity1);
+                }   
+     } catch (SQLException ex) {
+         Logger.getLogger(sales_admin.class.getName()).log(Level.SEVERE, null, ex);
+     }    
+        
+        int i = products_table.getSelectedRow();
+        id.setText(t.getValueAt(i, 0).toString());
+        barcode.setText(t.getValueAt(i, 1).toString());
+        name.setText(t.getValueAt(i, 2).toString());
+        size.setText(t.getValueAt(i, 3).toString());
+        price.setText(t.getValueAt(i, 4).toString());
+        quantity.setText("1");
+        // Add the prices to the selectcombo
+        selectcombo.removeAllItems();
+        selectcombo.addItem(t.getValueAt(i, 4).toString()); // price
+        selectcombo.addItem(t.getValueAt(i, 5).toString()); // price2
+        selectcombo.addItem(t.getValueAt(i, 6).toString()); // price3
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
     }//GEN-LAST:event_products_tableMouseClicked
 
     private void add_to_cartActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_add_to_cartActionPerformed
@@ -875,61 +1052,185 @@ private void updateCombo(){
         clear();
     }//GEN-LAST:event_removeActionPerformed
 
-    private void paid_amountActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_paid_amountActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_paid_amountActionPerformed
-
-    private void paid_amountKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_paid_amountKeyTyped
-        // TODO add your handling code here:
-        char c = evt.getKeyChar();
-
-        // Check if the entered key is a digit
-        if (!Character.isDigit(c)) {
-            evt.consume(); // Ignore the event, i.e., don't allow the character to be typed
-
-            Float paid=Float.valueOf(paid_amount.getText());
-            Float total=Float.valueOf(total_amount.getText());
-            Float bal=paid-total;
-            String change_=String.valueOf(bal);
-            change.setText(change_);
-        }
-        //    else{
-            //        JOptionPane.showMessageDialog(null, "Enter a Digit");
-            //    }
-    }//GEN-LAST:event_paid_amountKeyTyped
-
     private void finishActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_finishActionPerformed
         // TODO add your handling code here:
+      Float totalamount = Float.valueOf(total_amount.getText());
+String Status = null;
+
+if (cash == 0.0) {
+    Status = "UnPaid";
+} else if (totalamount > cash) {
+    Status = "Partial";
+} else if (totalamount <= cash) {
+    Status = "Paid";
+}
+
+LocalDate currentDate = LocalDate.now();
+
         DefaultTableModel model = (DefaultTableModel) items.getModel();
-        int rowCount = model.getRowCount();
+    int rowCount = model.getRowCount();
+    
+    // Iterate through the rows and insert data into 'solditems' table
+   try {
+    String sql = "INSERT INTO solditems (invoice_number, itemId, name, quantity, itemPrice, total,customer_name, customer_phone,sold_by,time,status,selldate,paid_amount,balanc) VALUES (?, ?, ?, ?, ?, ?,?,?,?,?,?,?,?,?)";
+    String invoiceDetailsSql = "INSERT INTO invoice_details (invoice_number) VALUES (?)";
+    String customerSql="insert into customers(customer_name,phone_number,invoice_number) values(?,?,?)";
+    
+    pst = conn.prepareStatement(sql);
+    PreparedStatement invoiceDetailsPst = conn.prepareStatement(invoiceDetailsSql);
+    PreparedStatement customerPst=conn.prepareStatement(customerSql);
 
-        // Iterate through the rows and insert data into 'solditems' table
-        try {
-            String sql = "INSERT INTO solditems (invoice_number,itemId, name, quantity, itemPrice, subTotal) VALUES (?, ?, ?, ?, ?, ?)";
-            pst = conn.prepareStatement(sql);
-            pst.setString(1, invoice_no.getText());
-            for (int i = 0; i < rowCount; i++) {
-                pst.setString(2, model.getValueAt(i, 0).toString()); // itemId
-                pst.setString(3, model.getValueAt(i, 2).toString()); // itemName
-                pst.setInt(4, Integer.parseInt(model.getValueAt(i, 3).toString()));// itemQuantity
-                pst.setFloat(5, Float.parseFloat(model.getValueAt(i, 4).toString()));// itemPrice
-                pst.setFloat(6, Float.parseFloat(model.getValueAt(i, 5).toString())); // subTotal
-                //pst.setString(6, model.getValueAt(i, 5).toString());
+    pst.setString(1,invoice_no.getText());
+    pst.setInt(1, Integer.valueOf(invoice_no.getText()));
+    invoiceDetailsPst.setInt(1, Integer.valueOf(invoice_no.getText()));
+    customerPst.setString(1, customer_name);
+    customerPst.setString(2, telephone_number);
+    customerPst.setInt(3, Integer.valueOf(invoice_no.getText()));
 
-                pst.executeUpdate();
-            }
 
-            JOptionPane.showMessageDialog(null, "Transaction successfull");
+    for (int i = 0; i < rowCount; i++) {
+        pst.setString(2, model.getValueAt(i, 0).toString()); // itemId
+        pst.setString(3, model.getValueAt(i, 2).toString()); // itemName
+        pst.setInt(4, Integer.parseInt(model.getValueAt(i, 3).toString())); // itemQuantity
+        pst.setFloat(5, Float.parseFloat(model.getValueAt(i, 4).toString())); // itemPrice
+        pst.setFloat(6,Float.valueOf(total_amount.getText()));
+        pst.setString(7, customer_name);
+        pst.setString(8, telephone_number);
+        pst.setString(9, counter.getText());
+        pst.setString(10, time.getText());
+        pst.setString(11, Status);
+        pst.setObject(12, currentDate);
+        pst.setFloat(13, cash);
+        pst.setFloat(14, Float.valueOf(change.getText()));
+        pst.executeUpdate();
+    }
+    view_receipt();
+    stkup();
+    invoiceDetailsPst.executeUpdate();
+    customerPst.executeUpdate();
+    JOptionPane.showMessageDialog(null, "Transaction successful");
+    cash = null;
+    customer_name = null;
+    telephone_number = null;
+    model.setRowCount(0);
+    total_amount.setText("");
+    change.setText("");
 
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(null, e);
-        }
-        InvoiceNumbers();
+} catch (SQLException e) {
+    JOptionPane.showMessageDialog(null, e);
+}
+
+       InvoiceNumbers();
     }//GEN-LAST:event_finishActionPerformed
 
     private void timeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_timeActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_timeActionPerformed
+
+    private void viewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_viewActionPerformed
+       try {
+        JasperDesign jdesign = JRXmlLoader.load("src\\reports\\solditemsrepo.jrxml");
+        String query = "select * from solditems where invoice_number = '" + invoice_no.getText() + "'";
+        JRDesignQuery updateQuery = new JRDesignQuery();
+        updateQuery.setText(query);
+        jdesign.setQuery(updateQuery);
+
+        JasperReport jreport = JasperCompileManager.compileReport(jdesign);
+        JasperPrint jprint = JasperFillManager.fillReport(jreport, null, conn);
+
+        // Create a separate JFrame for JasperViewer
+        JFrame frame = new JFrame("KEVINcustoms Receipt Viewer");
+        
+        // Set the default close operation to DISPOSE_ON_CLOSE
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+        // Create and show the JasperViewer within the JFrame
+        JasperViewer viewer = new JasperViewer(jprint, false);
+        frame.getContentPane().add(viewer.getContentPane());
+        frame.setSize(900, 700); // Set the size according to your preference
+        frame.setLocationRelativeTo(null); // Center the frame on the screen
+        frame.setVisible(true);
+
+    } catch (JRException ex) {
+        Logger.getLogger(sales_admin.class.getName()).log(Level.SEVERE, null, ex);
+    }
+    }//GEN-LAST:event_viewActionPerformed
+
+    private void barcodeKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_barcodeKeyPressed
+        // TODO add your handling code here:
+        if(evt.getKeyCode() == KeyEvent.VK_ENTER)
+     {
+     String brcode = barcode.getText().toLowerCase();
+         try {
+             Statement s = connection.connect().createStatement();
+             ResultSet rs = s.executeQuery("select * from products where barcode = '"+brcode+"'");  
+             
+             if(rs.next()){
+                  String ProductName = rs.getString("name");
+             String retail_price = rs.getString("price");
+             String productSize = rs.getString("size");
+             String quantity = rs.getString("quantity");
+             String prodId = rs.getString("productid");
+             stock_qty.setText(quantity);
+             price.setText(retail_price);
+             name.setText(ProductName);
+             size.setText(productSize);
+             id.setText(prodId);
+             updateCombo();
+             }
+             else{
+            
+             JOptionPane.showMessageDialog(this, "Barcode not Found");
+             
+             }
+         } catch (Exception e) {
+         }
+     }
+    }//GEN-LAST:event_barcodeKeyPressed
+
+    private void cashpaidMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_cashpaidMouseClicked
+        // TODO add your handling code here:
+        customer_name =JOptionPane.showInputDialog("Customer's Name: ");
+        telephone_number =JOptionPane.showInputDialog("Phone Number: ");
+        cash=Float.valueOf(JOptionPane.showInputDialog("Enter Cash Brought!"));
+        Float total_=Float.valueOf(total_amount.getText());
+        change.setText(String.valueOf(cash-total_));
+    }//GEN-LAST:event_cashpaidMouseClicked
+
+    private void view_allActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_view_allActionPerformed
+        // TODO add your handling code here:
+        
+         try {
+        JasperDesign jdesign = JRXmlLoader.load("src\\reports\\solditemsrepo.jrxml");
+        String query = "select * from solditems";
+        JRDesignQuery updateQuery = new JRDesignQuery();
+        updateQuery.setText(query);
+        jdesign.setQuery(updateQuery);
+
+        JasperReport jreport = JasperCompileManager.compileReport(jdesign);
+        JasperPrint jprint = JasperFillManager.fillReport(jreport, null, conn);
+
+        // Create a separate JFrame for JasperViewer
+        JFrame frame = new JFrame("KEVINcustoms Report Viewer");
+        
+        // Set the default close operation to DISPOSE_ON_CLOSE
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+        // Create and show the JasperViewer within the JFrame
+        JasperViewer viewer = new JasperViewer(jprint, false);
+        frame.getContentPane().add(viewer.getContentPane());
+        frame.setSize(900, 700); // Set the size according to your preference
+        frame.setLocationRelativeTo(null); // Center the frame on the screen
+        frame.setVisible(true);
+
+    } catch (JRException ex) {
+        Logger.getLogger(sales_admin.class.getName()).log(Level.SEVERE, null, ex);
+    }
+    }//GEN-LAST:event_view_allActionPerformed
+
+    private void formCaretPositionChanged(java.awt.event.InputMethodEvent evt) {//GEN-FIRST:event_formCaretPositionChanged
+        // TODO add your handling code here:
+    }//GEN-LAST:event_formCaretPositionChanged
 
     /**
      * @param args the command line arguments
@@ -957,6 +1258,7 @@ private void updateCombo(){
             java.util.logging.Logger.getLogger(counter.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
+        //</editor-fold>
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
@@ -969,6 +1271,7 @@ private void updateCombo(){
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton add_to_cart;
     private javax.swing.JTextField barcode;
+    private javax.swing.JLabel cashpaid;
     private javax.swing.JTextField change;
     private javax.swing.JTextField counter;
     private javax.swing.JTextField date;
@@ -976,7 +1279,6 @@ private void updateCombo(){
     private javax.swing.JTextField id;
     private javax.swing.JLabel invoice_no;
     private javax.swing.JTable items;
-    private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel11;
@@ -988,7 +1290,6 @@ private void updateCombo(){
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel8;
-    private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
@@ -998,7 +1299,6 @@ private void updateCombo(){
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JTextField name;
-    private javax.swing.JTextField paid_amount;
     private javax.swing.JTextField price;
     private javax.swing.JTable products_table;
     private javax.swing.JTextField quantity;
@@ -1009,6 +1309,7 @@ private void updateCombo(){
     private javax.swing.JLabel stock_qty;
     private javax.swing.JTextField time;
     private javax.swing.JTextField total_amount;
+    private javax.swing.JButton view;
     private javax.swing.JButton view_all;
     // End of variables declaration//GEN-END:variables
 }
