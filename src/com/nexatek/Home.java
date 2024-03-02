@@ -348,7 +348,9 @@ jpload.jPanelLoader(panel_load, cus);
     }//GEN-LAST:event_jToggleButton10ActionPerformed
 
     private void jToggleButton9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jToggleButton9ActionPerformed
-
+this.setVisible(false);
+LOGIN login = new LOGIN();
+login.setVisible(true);
     }//GEN-LAST:event_jToggleButton9ActionPerformed
 
     /**

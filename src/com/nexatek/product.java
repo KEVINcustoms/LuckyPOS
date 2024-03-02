@@ -749,6 +749,7 @@ if (qty.isEmpty()) {
         int quant = Integer.valueOf(rst.getString("quantity"));
         float unitcost = Float.valueOf(cost_price.getText());
         float totalcost = quant * unitcost;
+        JOptionPane.showMessageDialog(null, totalcost);
         
         pstextra_extra = conn.prepareStatement(sql4);
         pstextra_extra.setFloat(1, totalcost);
