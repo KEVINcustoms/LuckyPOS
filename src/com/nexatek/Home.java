@@ -324,6 +324,7 @@ Toolkit.getDefaultToolkit().beep();
        jpload.jPanelLoader(panel_load, sales);
     }//GEN-LAST:event_jToggleButton5ActionPerformed
 
+    
     private void jToggleButton6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jToggleButton6ActionPerformed
         // TODO add your handling code here:
         invoices inv= new invoices();
