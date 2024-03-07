@@ -121,7 +121,7 @@ PreparedStatement pst;
 //            }
 
 
-            String sql = "select * from users where username = ? and password = ?";
+            String sql = "select * from employeestbl where username = ? and password = ?";
             String sql2="select * from administrators where username=? and password=?";
             try{
             pst = conn.prepareStatement(sql);
