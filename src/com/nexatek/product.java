@@ -104,7 +104,6 @@ public class product extends javax.swing.JPanel {
             pst.setFloat(2, total);
             pst.setInt(3, qty);
             pst.execute();
-            JOptionPane.showMessageDialog(null, "successfully added the sum of costprice and saved to db");
         } catch (SQLException ex) {
             Logger.getLogger(product.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -664,13 +663,14 @@ public void updatingQuantity(){
 
     try {
         // Construct the SQL query for searching
-        String sql = "SELECT * FROM products WHERE barcode LIKE ? OR name LIKE ? OR category LIKE ?";
+        String sql = "SELECT * FROM products WHERE barcode LIKE ? OR name LIKE ? OR category LIKE ? OR size LIKE ?";
         pst = conn.prepareStatement(sql);
 
         // Set the parameters for the prepared statement
         pst.setString(1, "%" + searchCriteria + "%"); // Using "%" for partial matches
         pst.setString(2, "%" + searchCriteria + "%");
         pst.setString(3, "%" + searchCriteria + "%");
+        pst.setString(4, "%" + searchCriteria + "%");
         
 
         // Execute the query and update the JTable

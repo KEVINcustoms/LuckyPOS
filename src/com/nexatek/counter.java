@@ -67,6 +67,7 @@ ResultSet rst;
         sendOutOfStockData();
         InvoiceNumbers();   
         Update_table();
+        calculateTotalSalesPerDay();
     }
 
     private void  Update_table(){
@@ -218,11 +219,12 @@ private void updateCombo(){
  DefaultTableModel dt = (DefaultTableModel) items.getModel();
  int rc = dt.getRowCount();
  for(int i = 0; i<rc; i++){
- String bcode = dt.getValueAt(i, 1).toString(); //barcode
+     // here i have changed the barcode usage to productid
+ String bcode = dt.getValueAt(i, 0).toString(); //barcode
  String sell_qty = dt.getValueAt(i, 3).toString();//quantity
      try {
          Statement s = connection.connect().createStatement();
-         ResultSet rs = s.executeQuery("select quantity from products where barcode = '"+bcode+"'");
+         ResultSet rs = s.executeQuery("select quantity from products where productid = '"+bcode+"'");
          if(rs.next()){
          Stcok_qty = Double.valueOf(rs.getString("quantity"));
          }
@@ -235,14 +237,13 @@ private void updateCombo(){
      String nqty = String.valueOf(new_qty);
      try{
      Statement ss = connection.connect().createStatement();
-     ss.executeUpdate("update products set quantity = '"+nqty+"' where barcode = '"+bcode+"'");
+     ss.executeUpdate("update products set quantity = '"+nqty+"' where productid = '"+bcode+"'");
      }
      catch(Exception e){
          System.out.println(e);
      }
      
  }
- 
  }
   public void sendOutOfStockData() {
     String selectQuery = "SELECT * FROM products";
@@ -321,6 +322,62 @@ JOptionPane.showMessageDialog(null, name);
         }
     }
 }
+  
+    /*public void calculateTotalSalesPerDay() {
+    LocalDate currentDate = LocalDate.now();
+    java.sql.Date date1 = java.sql.Date.valueOf(currentDate);
+    String sql = "SELECT SUM(paid_amount) FROM solditems WHERE selldate = ? and sold_by = ?";
+    try{
+        pst = conn.prepareStatement(sql);
+        pst.setDate(1, date1);
+        pst.setString(2, counter.getText());
+        rst = pst.executeQuery();
+        JOptionPane.showMessageDialog(null, date1);
+            while (rst.next()) {
+                double paidAmount = rst.getDouble("paid_amount");
+               String Totalsales = String.valueOf(paidAmount);
+               totalsales.setText(Totalsales);
+               JOptionPane.showMessageDialog(null, change);
+                // Or log the paid amount using a logging framework   
+            }
+    } catch (SQLException ex) {
+        Logger.getLogger(sales_admin.class.getName()).log(Level.SEVERE, null, ex);
+    }
+}*/
+  // am calculating the total daily sales depending on the customer logged in 
+  public void calculateTotalSalesPerDay() {
+    LocalDate currentDate = LocalDate.now();
+    java.sql.Date date2 = java.sql.Date.valueOf(currentDate);
+    String date1 = String.valueOf(date2);
+    String users = counter.getText();
+    String sql = "SELECT SUM(paid_amount) AS total_sales FROM solditems WHERE selldate = '"+date1+"' and sold_by = '"+users+"'";
+                  //select sum(paid_amount) as total_sales from solditems where selldate = '2024-5-29' and sold_by = 'KEVINcustoms';
+    try {
+        pst = conn.prepareStatement(sql);
+       // pst.setString(1, date1);
+        //pst.setString(2, counter.getText());
+        rst = pst.executeQuery();
+
+        // JOptionPane.showMessageDialog(null, date1); 
+ if (rst.next()) {
+     //JOptionPane.showMessageDialog(null, rst.getDouble("total_sales"));
+            double paidAmount = rst.getDouble("total_sales");
+            String TotalSales = String.valueOf(paidAmount);
+            totalsales.setText(TotalSales);
+
+            // Show the result using a message dialog if needed
+            //JOptionPane.showMessageDialog(null, date1);
+        }
+
+    } catch (SQLException ex) {
+        Logger.getLogger(sales_admin.class.getName()).log(Level.SEVERE, null, ex);
+    }
+}
+  
+ public void profitsCalculation(){
+ // for the profits calculations
+ }
+
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -332,10 +389,14 @@ JOptionPane.showMessageDialog(null, name);
         jLabel2 = new javax.swing.JLabel();
         stock_qty = new javax.swing.JLabel();
         date = new javax.swing.JTextField();
-        counter = new javax.swing.JTextField();
         time = new javax.swing.JTextField();
         invoice = new javax.swing.JTextField();
         jLabel9 = new javax.swing.JLabel();
+        currentuser = new javax.swing.JLabel();
+        counter = new javax.swing.JLabel();
+        totalsales = new javax.swing.JLabel();
+        jLabel13 = new javax.swing.JLabel();
+        check = new javax.swing.JButton();
         jPanel4 = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         items = new javax.swing.JTable();
@@ -370,7 +431,7 @@ JOptionPane.showMessageDialog(null, name);
         jLabel8 = new javax.swing.JLabel();
         cashpaid = new javax.swing.JLabel();
         jToggleButton9 = new javax.swing.JToggleButton();
-        jLabel13 = new javax.swing.JLabel();
+        poweroff = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         addInputMethodListener(new java.awt.event.InputMethodListener() {
@@ -404,9 +465,6 @@ JOptionPane.showMessageDialog(null, name);
 
         date.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
 
-        counter.setFont(new java.awt.Font("Noto Sans CJK SC Black", 1, 18)); // NOI18N
-        counter.setText("mm-001");
-
         time.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
         time.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -419,6 +477,20 @@ JOptionPane.showMessageDialog(null, name);
         jLabel9.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
         jLabel9.setText("Invoice NO.");
 
+        counter.setFont(new java.awt.Font("Segoe UI", 1, 23)); // NOI18N
+
+        totalsales.setFont(new java.awt.Font("Cantarell", 1, 18)); // NOI18N
+
+        jLabel13.setFont(new java.awt.Font("Cantarell", 1, 18)); // NOI18N
+        jLabel13.setText("Total sales");
+
+        check.setText("check");
+        check.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                checkActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
@@ -426,31 +498,40 @@ JOptionPane.showMessageDialog(null, name);
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jLabel1)
-                .addGap(18, 18, 18)
-                .addComponent(invoice_no, javax.swing.GroupLayout.PREFERRED_SIZE, 220, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addComponent(selectcombo, javax.swing.GroupLayout.PREFERRED_SIZE, 237, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(59, 59, 59)
+                        .addComponent(currentuser, javax.swing.GroupLayout.PREFERRED_SIZE, 258, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
                         .addGap(18, 18, 18)
-                        .addComponent(counter, javax.swing.GroupLayout.PREFERRED_SIZE, 203, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(32, 32, 32)
-                        .addComponent(date, javax.swing.GroupLayout.PREFERRED_SIZE, 208, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(invoice_no, javax.swing.GroupLayout.PREFERRED_SIZE, 175, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(check, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGap(26, 26, 26)))
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(selectcombo, javax.swing.GroupLayout.PREFERRED_SIZE, 237, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addComponent(jLabel2)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(stock_qty, javax.swing.GroupLayout.PREFERRED_SIZE, 94, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jLabel9, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(17, 17, 17)))
+                        .addComponent(stock_qty, javax.swing.GroupLayout.PREFERRED_SIZE, 94, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addGap(18, 18, 18)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(jLabel13)
+                        .addGap(18, 18, 18)
+                        .addComponent(totalsales, javax.swing.GroupLayout.PREFERRED_SIZE, 213, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(jLabel9, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(counter, javax.swing.GroupLayout.PREFERRED_SIZE, 192, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(62, 62, 62)
+                        .addComponent(date)))
+                .addGap(20, 20, 20)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addGap(32, 32, 32)
-                        .addComponent(time))
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addGap(3, 3, 3)
-                        .addComponent(invoice)))
-                .addContainerGap())
+                    .addComponent(time, javax.swing.GroupLayout.PREFERRED_SIZE, 89, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(invoice, javax.swing.GroupLayout.PREFERRED_SIZE, 80, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -461,15 +542,16 @@ JOptionPane.showMessageDialog(null, name);
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel1)
                             .addComponent(invoice_no, javax.swing.GroupLayout.PREFERRED_SIZE, 43, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addGap(6, 6, Short.MAX_VALUE))
                     .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addGap(2, 2, 2)
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(counter)
-                            .addGroup(jPanel2Layout.createSequentialGroup()
-                                .addGap(4, 4, 4)
-                                .addComponent(selectcombo))
-                            .addComponent(date)
-                            .addComponent(time))
+                            .addComponent(counter, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(selectcombo)
+                            .addComponent(check, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(date)
+                                .addComponent(time)))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)))
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(stock_qty, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -477,8 +559,14 @@ JOptionPane.showMessageDialog(null, name);
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel2)
                             .addComponent(jLabel9, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(invoice, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(0, 0, Short.MAX_VALUE))))
+                            .addComponent(invoice, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(currentuser, javax.swing.GroupLayout.PREFERRED_SIZE, 24, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(totalsales, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel13))
+                        .addContainerGap())))
         );
 
         jPanel4.setBorder(javax.swing.BorderFactory.createEtchedBorder());
@@ -532,9 +620,7 @@ JOptionPane.showMessageDialog(null, name);
         jPanel6.setLayout(jPanel6Layout);
         jPanel6Layout.setHorizontalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel6Layout.createSequentialGroup()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 1266, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 0, Short.MAX_VALUE))
+            .addComponent(jScrollPane2)
         );
         jPanel6Layout.setVerticalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -560,6 +646,11 @@ JOptionPane.showMessageDialog(null, name);
 
         name.setFont(new java.awt.Font("Noto Sans", 1, 23)); // NOI18N
         name.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(0, 255, 255), 1, true));
+        name.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                nameActionPerformed(evt);
+            }
+        });
         name.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyTyped(java.awt.event.KeyEvent evt) {
                 nameKeyTyped(evt);
@@ -692,16 +783,17 @@ JOptionPane.showMessageDialog(null, name);
         jPanel4Layout.setHorizontalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel4Layout.createSequentialGroup()
-                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel4Layout.createSequentialGroup()
-                        .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(view, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(view_all, javax.swing.GroupLayout.PREFERRED_SIZE, 188, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                    .addComponent(jPanel6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.LEADING))
+                .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(56, 56, 56)
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(view, javax.swing.GroupLayout.PREFERRED_SIZE, 188, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(view_all, javax.swing.GroupLayout.PREFERRED_SIZE, 188, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(0, 0, Short.MAX_VALUE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jPanel6, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jScrollPane1))
+                .addContainerGap())
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -855,21 +947,25 @@ JOptionPane.showMessageDialog(null, name);
             }
         });
 
-        jLabel13.setFont(new java.awt.Font("Cantarell", 1, 17)); // NOI18N
-        jLabel13.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/nexatek/images/img/icons8-power-off-48.png"))); // NOI18N
-        jLabel13.setText("Power Off");
-        jLabel13.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
+        poweroff.setFont(new java.awt.Font("Segoe UI", 1, 17)); // NOI18N
+        poweroff.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/nexatek/images/img/icons8-power-off-48.png"))); // NOI18N
+        poweroff.setText("Power Off");
+        poweroff.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                poweroffActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(0, 14, Short.MAX_VALUE)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(add_to_cart, javax.swing.GroupLayout.PREFERRED_SIZE, 138, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel13, javax.swing.GroupLayout.PREFERRED_SIZE, 147, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(20, 20, 20)
+                .addGap(0, 0, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(poweroff, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(add_to_cart, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(29, 29, 29)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(remove, javax.swing.GroupLayout.PREFERRED_SIZE, 138, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -900,16 +996,16 @@ JOptionPane.showMessageDialog(null, name);
                     .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
                         .addComponent(cashpaid, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(finish, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addComponent(finish, javax.swing.GroupLayout.DEFAULT_SIZE, 77, Short.MAX_VALUE))
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(remove, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(removeall, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(add_to_cart, javax.swing.GroupLayout.PREFERRED_SIZE, 70, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jToggleButton9, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel13, javax.swing.GroupLayout.PREFERRED_SIZE, 61, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(jToggleButton9, javax.swing.GroupLayout.DEFAULT_SIZE, 65, Short.MAX_VALUE)
+                            .addComponent(poweroff, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                     .addComponent(jPanel7, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
@@ -946,12 +1042,13 @@ JOptionPane.showMessageDialog(null, name);
 
     try {
     // Construct the SQL query for searching
-    String sql = "SELECT * FROM products WHERE barcode LIKE ? OR name LIKE ? OR category LIKE ?";
+    String sql = "SELECT * FROM products WHERE barcode LIKE ? OR name LIKE ? OR category LIKE ? OR size LIKE ?";
     pst = conn.prepareStatement(sql);
     // Set the parameters for the prepared statement
     pst.setString(1, "%" + searchCriteria + "%"); // Using "%" for partial matches
     pst.setString(2, "%" + searchCriteria + "%");
     pst.setString(3, "%" + searchCriteria + "%");
+    pst.setString(4, "%" + searchCriteria + "%");
     rst = pst.executeQuery();       
 
        products_table.setModel(DbUtils.resultSetToTableModel(rst));
@@ -1050,9 +1147,6 @@ try {
 int idforuse = Integer.parseInt(id.getText());
 
     if(selqty > 0){ 
-        
-    
-        JOptionPane.showMessageDialog(null, selqty);
 if(selqty<stqty || selqty == stqty){
     
       String sql = "select price,price2 from products where productid = ?";
@@ -1063,7 +1157,6 @@ if(selqty<stqty || selqty == stqty){
         if(rst.next()){
         float price1 = Float.parseFloat(rst.getString("price").trim());
         float price2 = Float.parseFloat(rst.getString("price2").trim());
-        JOptionPane.showMessageDialog(null, price1);
         if(priceField <= price1 && priceField >= price2 ){
     String itemId = id.getText();
     String itemBarcode = barcode.getText();
@@ -1132,6 +1225,7 @@ JOptionPane.showMessageDialog(null, "The value you have inserted is invalid plea
             JOptionPane.showMessageDialog(this, "Please select a row to remove.", "No Row Selected", JOptionPane.WARNING_MESSAGE);
         }
         clear();
+        calculateTotal();
     }//GEN-LAST:event_removeActionPerformed
 
     private void finishActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_finishActionPerformed
@@ -1171,7 +1265,10 @@ LocalDate currentDate = LocalDate.now();
 
 
     for (int i = 0; i < rowCount; i++) {
-        pst.setString(2, model.getValueAt(i, 0).toString()); // itemId
+       // pst.setString(2, model.getValueAt(i, 0).toString()); // itemId
+        String tempid = model.getValueAt(i, 0).toString();
+        int tempid2 = Integer.parseInt(tempid);
+        pst.setInt(2, tempid2);
         pst.setString(3, model.getValueAt(i, 2).toString()); // itemName
         pst.setInt(4, Integer.parseInt(model.getValueAt(i, 3).toString())); // itemQuantity
         pst.setFloat(5, Float.parseFloat(model.getValueAt(i, 4).toString())); // itemPrice
@@ -1183,7 +1280,7 @@ LocalDate currentDate = LocalDate.now();
         pst.setString(11, Status);
         pst.setObject(12, currentDate);
         pst.setFloat(13, cash);
-        pst.setFloat(14, Float.valueOf(change.getText()));
+        pst.setFloat(14, Float.parseFloat(change.getText()));
         pst.executeUpdate();
     }
     view_receipt();
@@ -1193,6 +1290,7 @@ LocalDate currentDate = LocalDate.now();
     customerPst.executeUpdate();
     JOptionPane.showMessageDialog(null, "Transaction successful");
     Update_table();
+    calculateTotalSalesPerDay();
     cash = null;
     customer_name = null;
     telephone_number = null;
@@ -1325,6 +1423,18 @@ login.setVisible(true);
         // TODO add your handling code here:
     }//GEN-LAST:event_priceKeyTyped
 
+    private void poweroffActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_poweroffActionPerformed
+    System.exit(0);
+    }//GEN-LAST:event_poweroffActionPerformed
+
+    private void nameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_nameActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_nameActionPerformed
+
+    private void checkActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_checkActionPerformed
+       calculateTotalSalesPerDay();
+    }//GEN-LAST:event_checkActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -1366,7 +1476,9 @@ login.setVisible(true);
     private javax.swing.JTextField barcode;
     private javax.swing.JLabel cashpaid;
     private javax.swing.JTextField change;
-    private javax.swing.JTextField counter;
+    private javax.swing.JButton check;
+    public javax.swing.JLabel counter;
+    private javax.swing.JLabel currentuser;
     private javax.swing.JTextField date;
     private javax.swing.JButton finish;
     private javax.swing.JTextField id;
@@ -1396,6 +1508,7 @@ login.setVisible(true);
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JToggleButton jToggleButton9;
     private javax.swing.JTextField name;
+    private javax.swing.JButton poweroff;
     private javax.swing.JTextField price;
     private javax.swing.JTable products_table;
     private javax.swing.JTextField quantity;
@@ -1406,6 +1519,7 @@ login.setVisible(true);
     private javax.swing.JLabel stock_qty;
     private javax.swing.JTextField time;
     private javax.swing.JTextField total_amount;
+    private javax.swing.JLabel totalsales;
     private javax.swing.JButton view;
     private javax.swing.JButton view_all;
     // End of variables declaration//GEN-END:variables

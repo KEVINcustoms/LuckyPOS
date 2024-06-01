@@ -133,6 +133,8 @@ PreparedStatement pst;
                 this.setVisible(false);
                  JOptionPane.showMessageDialog(null,"Welcome.."+username.getText());
              counter count = new counter();
+             count.pack();
+             count.counter.setText(username.getText());
             count.setVisible(true);               
            }
             
@@ -146,6 +148,8 @@ PreparedStatement pst;
                 pst.close();
                 this.setVisible(false);
                 Home e = new Home();
+                e.pack();
+                e.counter.setText(username.getText());
                 e.setVisible(true); 
                  JOptionPane.showMessageDialog(null, "Welcome... "+username.getText());
                  

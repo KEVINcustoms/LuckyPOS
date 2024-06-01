@@ -346,7 +346,7 @@ PreparedStatement pstInsert2;
         Logger.getLogger(out_of_stock.class.getName()).log(Level.SEVERE, null, ex);
     }
     try {
-        pst.setString(1, barcode);
+        pst.setString(1, search_bar.getText());
         pst.execute();
     } catch (SQLException ex) {
         Logger.getLogger(out_of_stock.class.getName()).log(Level.SEVERE, null, ex);

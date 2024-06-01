@@ -5,6 +5,9 @@
 
 package com.nexatek;
 
+import static com.nexatek.counter.cash;
+import static com.nexatek.counter.customer_name;
+import static com.nexatek.counter.telephone_number;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.HeadlessException;
@@ -29,10 +32,10 @@ import net.sf.jasperreports.engine.JasperCompileManager;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
-import net.sf.jasperreports.engine.design.JRDesignQuery;
+import net.sf.jasperreports.engine.design.JRDesignQuery;import net.sf.jasperreports.view.JasperViewer;
+
 import net.sf.jasperreports.engine.design.JasperDesign;
 import net.sf.jasperreports.engine.xml.JRXmlLoader;
-import net.sf.jasperreports.view.JasperViewer;
 
 
 /**
@@ -191,11 +194,12 @@ private void updateCombo(){
  DefaultTableModel dt = (DefaultTableModel) items.getModel();
  int rc = dt.getRowCount();
  for(int i = 0; i<rc; i++){
- String bcode = dt.getValueAt(i, 1).toString(); //barcode
+     // here i have changed the barcode usage to productid
+ String bcode = dt.getValueAt(i, 0).toString(); //barcode
  String sell_qty = dt.getValueAt(i, 3).toString();//quantity
      try {
          Statement s = connection.connect().createStatement();
-         ResultSet rs = s.executeQuery("select quantity from products where barcode = '"+bcode+"'");
+         ResultSet rs = s.executeQuery("select quantity from products where productid = '"+bcode+"'");
          if(rs.next()){
          Stcok_qty = Double.valueOf(rs.getString("quantity"));
          }
@@ -208,7 +212,7 @@ private void updateCombo(){
      String nqty = String.valueOf(new_qty);
      try{
      Statement ss = connection.connect().createStatement();
-     ss.executeUpdate("update products set quantity = '"+nqty+"' where barcode = '"+bcode+"'");
+     ss.executeUpdate("update products set quantity = '"+nqty+"' where productid = '"+bcode+"'");
      }
      catch(Exception e){
          System.out.println(e);
@@ -254,7 +258,7 @@ private void updateCombo(){
         rst = pst.executeQuery();
 
         while (rst.next()) {
-            String productid = rst.getString("productid");
+            int productid = Integer.parseInt(rst.getString("productid"));
             String barcode = rst.getString("barcode");
             String name = rst.getString("name");
             String size = rst.getString("size");
@@ -274,7 +278,7 @@ private void updateCombo(){
             if ("0".equals(quantity)) { // Check if quantity is zero
                 try {
                     String deleteQuery = "DELETE FROM products WHERE quantity = ?";
-                    String insertQuery = "INSERT INTO out_of_stock (barcode, name, size, price, price2, price3, quantity, category, supplier_id, cost_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                    String insertQuery = "INSERT INTO out_of_stock (productid,barcode, name, size, price, price2, price3, quantity, category, supplier_id, cost_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)";
 
                     // Use a different PreparedStatement for the DELETE query
                     pstDelete = conn.prepareStatement(deleteQuery);
@@ -282,16 +286,17 @@ private void updateCombo(){
                     pstDelete.execute();
                     // Use a different PreparedStatement for the INSERT query
                     pstInsert = conn.prepareStatement(insertQuery);
-                    pstInsert.setString(1,barcode);
-            pstInsert.setString(2,name);
-            pstInsert.setString(3,size);
-            pstInsert.setFloat(4, prc);
-            pstInsert.setFloat(5, prc2);
-            pstInsert.setFloat(6, prc3);
-            pstInsert.setInt(7, Integer.parseInt(quantity));
-            pstInsert.setString(8, category);
-            pstInsert.setInt(9,Integer.valueOf(supplier_id));
-            pstInsert.setFloat(10, costp);
+                    pstInsert.setInt(1, productid);
+                    pstInsert.setString(2,barcode);
+            pstInsert.setString(3,name);
+            pstInsert.setString(4,size);
+            pstInsert.setFloat(5, prc);
+            pstInsert.setFloat(6, prc2);
+            pstInsert.setFloat(7, prc3);
+            pstInsert.setInt(8, Integer.parseInt(quantity));
+            pstInsert.setString(9, category);
+            pstInsert.setInt(10,Integer.valueOf(supplier_id));
+            pstInsert.setFloat(11, costp);
                     pstInsert.execute();
                     
                     JOptionPane.showMessageDialog(null, "You have sold your last items and product is now out of stock /n KEVINcustoms is advising you to refill the stock");
@@ -324,6 +329,7 @@ private void updateCombo(){
         }
     }
 }
+
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -415,7 +421,7 @@ private void updateCombo(){
                         .addComponent(selectcombo, javax.swing.GroupLayout.PREFERRED_SIZE, 178, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
                         .addComponent(counter, javax.swing.GroupLayout.PREFERRED_SIZE, 183, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 22, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(date, javax.swing.GroupLayout.PREFERRED_SIZE, 200, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addGap(9, 9, 9)
@@ -423,8 +429,8 @@ private void updateCombo(){
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(stock_qty, javax.swing.GroupLayout.PREFERRED_SIZE, 94, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(time, javax.swing.GroupLayout.PREFERRED_SIZE, 131, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(19, Short.MAX_VALUE))
+                .addComponent(time, javax.swing.GroupLayout.PREFERRED_SIZE, 138, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -790,12 +796,11 @@ private void updateCombo(){
                 .addComponent(finish, javax.swing.GroupLayout.PREFERRED_SIZE, 253, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jPanel2, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                        .addComponent(jPanel3, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                        .addComponent(jPanel4, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addComponent(jPanel6, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                    .addComponent(jPanel3, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 1048, Short.MAX_VALUE)
+                    .addComponent(jPanel4, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jPanel6, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jPanel2, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addGap(0, 0, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
@@ -867,12 +872,13 @@ private void updateCombo(){
 
     try {
     // Construct the SQL query for searching
-    String sql = "SELECT * FROM products WHERE barcode LIKE ? OR name LIKE ? OR category LIKE ?";
+    String sql = "SELECT * FROM products WHERE barcode LIKE ? OR name LIKE ? OR category LIKE ? OR size LIKE ?";
     pst = conn.prepareStatement(sql);
     // Set the parameters for the prepared statement
     pst.setString(1, "%" + searchCriteria + "%"); // Using "%" for partial matches
     pst.setString(2, "%" + searchCriteria + "%");
     pst.setString(3, "%" + searchCriteria + "%");
+    pst.setString(4, "%" + searchCriteria + "%");
     rst = pst.executeQuery();       
 
        products_table.setModel(DbUtils.resultSetToTableModel(rst));
@@ -893,9 +899,6 @@ private void updateCombo(){
 int idforuse = Integer.parseInt(id.getText());
 
     if(selqty > 0){ 
-        
-    
-        JOptionPane.showMessageDialog(null, selqty);
 if(selqty<stqty || selqty == stqty){
     
       String sql = "select price,price2,price3 from products where productid = ?";
@@ -907,7 +910,6 @@ if(selqty<stqty || selqty == stqty){
         float price1 = Float.parseFloat(rst.getString("price").trim());
         float price2 = Float.parseFloat(rst.getString("price2").trim());
         float price3 = Float.parseFloat(rst.getString("price3").trim());
-        JOptionPane.showMessageDialog(null, price1);
         if(priceField <= price1 && priceField >= price3 ){
     String itemId = id.getText();
     String itemBarcode = barcode.getText();
@@ -963,6 +965,7 @@ JOptionPane.showMessageDialog(null, "The value you have inserted is invalid plea
         JOptionPane.showMessageDialog(this, "Please select a row to remove.", "No Row Selected", JOptionPane.WARNING_MESSAGE);
     }
     clear();
+    calculateTotal();
     }//GEN-LAST:event_removeActionPerformed
 
     private void finishActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_finishActionPerformed
@@ -1002,7 +1005,10 @@ LocalDate currentDate = LocalDate.now();
 
 
     for (int i = 0; i < rowCount; i++) {
-        pst.setString(2, model.getValueAt(i, 0).toString()); // itemId
+        // pst.setString(2, model.getValueAt(i, 0).toString()); // itemId
+        String tempid = model.getValueAt(i, 0).toString();
+        int tempid2 = Integer.parseInt(tempid);
+        pst.setInt(2, tempid2);
         pst.setString(3, model.getValueAt(i, 2).toString()); // itemName
         pst.setInt(4, Integer.parseInt(model.getValueAt(i, 3).toString())); // itemQuantity
         pst.setFloat(5, Float.parseFloat(model.getValueAt(i, 4).toString())); // itemPrice
@@ -1014,7 +1020,7 @@ LocalDate currentDate = LocalDate.now();
         pst.setString(11, Status);
         pst.setObject(12, currentDate);
         pst.setFloat(13, cash);
-        pst.setFloat(14, Float.valueOf(change.getText()));
+        pst.setFloat(14, Float.parseFloat(change.getText()));
         pst.executeUpdate();
     }
 view_receipt();

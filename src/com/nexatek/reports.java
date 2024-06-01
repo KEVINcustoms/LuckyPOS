@@ -76,6 +76,8 @@ Connection conn;
         jButton1 = new javax.swing.JButton();
         view_all = new javax.swing.JButton();
         view_all1 = new javax.swing.JButton();
+        view_all2 = new javax.swing.JButton();
+        view_all3 = new javax.swing.JButton();
 
         jPanel2.setBorder(javax.swing.BorderFactory.createEtchedBorder());
 
@@ -108,6 +110,22 @@ Connection conn;
             }
         });
 
+        view_all2.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
+        view_all2.setText("Product prices");
+        view_all2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                view_all2ActionPerformed(evt);
+            }
+        });
+
+        view_all3.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
+        view_all3.setText("Product prices");
+        view_all3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                view_all3ActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
@@ -119,11 +137,15 @@ Connection conn;
                 .addComponent(invoice, javax.swing.GroupLayout.PREFERRED_SIZE, 286, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
                 .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 94, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(37, 37, 37)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(view_all)
-                .addGap(26, 26, 26)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(view_all1)
-                .addContainerGap(123, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(view_all3)
+                    .addComponent(view_all2))
+                .addContainerGap(16, Short.MAX_VALUE))
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -134,13 +156,16 @@ Connection conn;
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(view_all, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(view_all1, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                            .addComponent(view_all1, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(view_all2, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE)))
                     .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel2Layout.createSequentialGroup()
                         .addGap(16, 16, 16)
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(invoice, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                .addContainerGap(53, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(view_all3, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(15, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
@@ -238,6 +263,65 @@ Connection conn;
     }
     }//GEN-LAST:event_view_all1ActionPerformed
 
+    private void view_all2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_view_all2ActionPerformed
+     // TODO add your handling code here:
+        try {
+        JasperDesign jdesign = JRXmlLoader.load("src\\reports\\productprices.jrxml");
+        String query = "select * from products";
+        JRDesignQuery updateQuery = new JRDesignQuery();
+        updateQuery.setText(query);
+        jdesign.setQuery(updateQuery);
+
+        JasperReport jreport = JasperCompileManager.compileReport(jdesign);
+        JasperPrint jprint = JasperFillManager.fillReport(jreport, null, conn);
+
+        // Create a separate JFrame for JasperViewer
+        JFrame frame = new JFrame("KEVINcustoms Report Viewer");
+        
+        // Set the default close operation to DISPOSE_ON_CLOSE
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+        // Create and show the JasperViewer within the JFrame
+        JasperViewer viewer = new JasperViewer(jprint, false);
+        frame.getContentPane().add(viewer.getContentPane());
+        frame.setSize(900, 700); // Set the size according to your preference
+        frame.setLocationRelativeTo(null); // Center the frame on the screen
+        frame.setVisible(true);
+
+    } catch (JRException ex) {
+        Logger.getLogger(sales_admin.class.getName()).log(Level.SEVERE, null, ex);
+    }
+    }//GEN-LAST:event_view_all2ActionPerformed
+
+    private void view_all3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_view_all3ActionPerformed
+    try {
+        JasperDesign jdesign = JRXmlLoader.load("src\\reports\\productprices2.jrxml");
+        String query = "select * from products";
+        JRDesignQuery updateQuery = new JRDesignQuery();
+        updateQuery.setText(query);
+        jdesign.setQuery(updateQuery);
+
+        JasperReport jreport = JasperCompileManager.compileReport(jdesign);
+        JasperPrint jprint = JasperFillManager.fillReport(jreport, null, conn);
+
+        // Create a separate JFrame for JasperViewer
+        JFrame frame = new JFrame("KEVINcustoms Report Viewer");
+        
+        // Set the default close operation to DISPOSE_ON_CLOSE
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+        // Create and show the JasperViewer within the JFrame
+        JasperViewer viewer = new JasperViewer(jprint, false);
+        frame.getContentPane().add(viewer.getContentPane());
+        frame.setSize(900, 700); // Set the size according to your preference
+        frame.setLocationRelativeTo(null); // Center the frame on the screen
+        frame.setVisible(true);
+
+    } catch (JRException ex) {
+        Logger.getLogger(sales_admin.class.getName()).log(Level.SEVERE, null, ex);
+    }      
+    }//GEN-LAST:event_view_all3ActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField invoice;
@@ -247,5 +331,7 @@ Connection conn;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JButton view_all;
     private javax.swing.JButton view_all1;
+    private javax.swing.JButton view_all2;
+    private javax.swing.JButton view_all3;
     // End of variables declaration//GEN-END:variables
 }
