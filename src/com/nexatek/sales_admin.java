@@ -277,13 +277,14 @@ private void updateCombo(){
 
             if ("0".equals(quantity)) { // Check if quantity is zero
                 try {
-                    String deleteQuery = "DELETE FROM products WHERE quantity = ?";
+                    //am no longer deleting data from products but am just sending the data to out of stock table
+                    //String deleteQuery = "DELETE FROM products WHERE quantity = ?";
                     String insertQuery = "INSERT INTO out_of_stock (productid,barcode, name, size, price, price2, price3, quantity, category, supplier_id, cost_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)";
 
                     // Use a different PreparedStatement for the DELETE query
-                    pstDelete = conn.prepareStatement(deleteQuery);
-                    pstDelete.setFloat(1, qty);
-                    pstDelete.execute();
+                    //pstDelete = conn.prepareStatement(deleteQuery);
+                    //pstDelete.setFloat(1, qty);
+                    //pstDelete.execute();
                     // Use a different PreparedStatement for the INSERT query
                     pstInsert = conn.prepareStatement(insertQuery);
                     pstInsert.setInt(1, productid);
@@ -299,7 +300,7 @@ private void updateCombo(){
             pstInsert.setFloat(11, costp);
                     pstInsert.execute();
                     
-                    JOptionPane.showMessageDialog(null, "You have sold your last items and product is now out of stock /n KEVINcustoms is advising you to refill the stock");
+                    JOptionPane.showMessageDialog(null, "You have sold your last items and product is now out of stock \n KEVINcustoms is advising you to refill the stock");
                 } catch (SQLException e) {
                     JOptionPane.showMessageDialog(null, e);
                 }
@@ -373,6 +374,7 @@ private void updateCombo(){
         remove = new javax.swing.JButton();
         removeall = new javax.swing.JButton();
         cashpaid = new javax.swing.JLabel();
+        jButton1 = new javax.swing.JButton();
 
         jPanel2.setBorder(javax.swing.BorderFactory.createEtchedBorder());
 
@@ -472,6 +474,11 @@ private void updateCombo(){
 
         name.setFont(new java.awt.Font("Noto Sans", 1, 23)); // NOI18N
         name.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(0, 255, 255), 1, true));
+        name.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                nameActionPerformed(evt);
+            }
+        });
         name.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyTyped(java.awt.event.KeyEvent evt) {
                 nameKeyTyped(evt);
@@ -780,6 +787,14 @@ private void updateCombo(){
             }
         });
 
+        jButton1.setFont(new java.awt.Font("Arial", 1, 16)); // NOI18N
+        jButton1.setText("Statistics");
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -790,7 +805,9 @@ private void updateCombo(){
                 .addComponent(remove, javax.swing.GroupLayout.PREFERRED_SIZE, 138, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(removeall, javax.swing.GroupLayout.PREFERRED_SIZE, 142, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(141, 141, 141)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 117, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(cashpaid, javax.swing.GroupLayout.PREFERRED_SIZE, 178, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
                 .addComponent(finish, javax.swing.GroupLayout.PREFERRED_SIZE, 253, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -815,17 +832,20 @@ private void updateCombo(){
                 .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGap(34, 34, 34)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(remove, javax.swing.GroupLayout.PREFERRED_SIZE, 54, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(removeall, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(add_to_cart, javax.swing.GroupLayout.PREFERRED_SIZE, 56, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(finish, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGap(28, 28, 28)
-                        .addComponent(cashpaid, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(finish, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(cashpaid, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addGap(6, 6, 6)
+                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(remove, javax.swing.GroupLayout.PREFERRED_SIZE, 54, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(removeall, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(add_to_cart, javax.swing.GroupLayout.PREFERRED_SIZE, 56, javax.swing.GroupLayout.PREFERRED_SIZE)))))))
                 .addContainerGap(11, Short.MAX_VALUE))
         );
 
@@ -1181,6 +1201,17 @@ if(evt.getKeyCode() == KeyEvent.VK_ENTER)
         // TODO add your handling code here:
     }//GEN-LAST:event_priceKeyTyped
 
+    private void nameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_nameActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_nameActionPerformed
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        // TODO add your handling code here:
+        this.setVisible(false);
+Statistics_table state = new Statistics_table();
+state.setVisible(true);
+    }//GEN-LAST:event_jButton1ActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton add_to_cart;
@@ -1193,6 +1224,7 @@ if(evt.getKeyCode() == KeyEvent.VK_ENTER)
     private javax.swing.JTextField id;
     private javax.swing.JLabel invoice_no;
     private javax.swing.JTable items;
+    private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel11;

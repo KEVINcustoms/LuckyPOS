@@ -262,6 +262,9 @@ PreparedStatement pstInsert2;
             if (newqty != 0){
             String sql = "delete from out_of_stock where barcode = ?";
             String sql2= "Insert into products (barcode,name,size,price,price2,price3,quantity,category, supplier_id, cost_price) values(?,?,?,?,?,?,?,?,?,?)";
+            
+//// this part must be altered for correct calculations
+            
             String sql3 = "Insert into sub_cost_price(product_name,sub_costp,quantity )";
             pst = conn.prepareStatement(sql);
             pst.setString(1, barcode);

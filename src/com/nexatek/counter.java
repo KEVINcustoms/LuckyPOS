@@ -371,12 +371,9 @@ JOptionPane.showMessageDialog(null, name);
 
     } catch (SQLException ex) {
         Logger.getLogger(sales_admin.class.getName()).log(Level.SEVERE, null, ex);
-    }
+    } 
 }
   
- public void profitsCalculation(){
- // for the profits calculations
- }
 
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
