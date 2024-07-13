@@ -35,6 +35,7 @@ Connection conn;
         conn = connection.connect();
         initComponents();
         profitsCalculation();
+        addProfits();
         
     }
     
@@ -166,6 +167,32 @@ Connection conn;
             return this;
         }
     }
+    public void addProfits(){
+        double sum = 0;
+        model = (DefaultTableModel) table2.getModel();
+        for(int row=1;row<model.getRowCount();row++){
+        //start from 1 to skip the header row
+        Object value = model.getValueAt(row, 7);
+        if(value instanceof Number){
+            double numericValue = ((Number)value).doubleValue();
+            if(numericValue>=0){
+                sum += numericValue;
+                totalprofits.setText(String.valueOf(sum));
+            }
+        }else{
+        try{
+            double numericValue=Double.parseDouble(value.toString());
+            if(numericValue>=0){
+            sum +=numericValue;
+            totalprofits.setText(String.valueOf(sum));
+            }
+        }catch(NumberFormatException e){
+        //Handle or long invalid number format if necessary
+        }
+        }
+        }
+        
+    }
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -178,6 +205,8 @@ Connection conn;
         jLabel1 = new javax.swing.JLabel();
         jScrollPane2 = new javax.swing.JScrollPane();
         table2 = new javax.swing.JTable();
+        jLabel2 = new javax.swing.JLabel();
+        totalprofits = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -196,19 +225,33 @@ Connection conn;
         ));
         jScrollPane2.setViewportView(table2);
 
+        jLabel2.setText("TOTAL PROFITS MADE");
+
+        totalprofits.setFont(new java.awt.Font("Arial", 1, 20)); // NOI18N
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 409, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 0, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 171, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(43, 43, 43)
+                .addComponent(totalprofits, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
             .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 1020, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 43, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 43, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(totalprofits, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 450, Short.MAX_VALUE))
         );
@@ -231,8 +274,10 @@ Connection conn;
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JTable table2;
+    private javax.swing.JLabel totalprofits;
     // End of variables declaration//GEN-END:variables
 
 }
