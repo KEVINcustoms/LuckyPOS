@@ -555,9 +555,9 @@ private void updateCombo(){
                     .addComponent(jLabel6))
                 .addGap(28, 28, 28)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(id)
-                    .addComponent(quantity, javax.swing.GroupLayout.PREFERRED_SIZE, 191, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(27, 27, 27))
+                    .addComponent(quantity, javax.swing.GroupLayout.DEFAULT_SIZE, 203, Short.MAX_VALUE)
+                    .addComponent(id))
+                .addGap(15, 15, 15))
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1003,7 +1003,7 @@ if (cash == 0.0) {
 
 LocalDate currentDate = LocalDate.now();
 
-        DefaultTableModel model = (DefaultTableModel) items.getModel();
+    DefaultTableModel model = (DefaultTableModel) items.getModel();
     int rowCount = model.getRowCount();
     
     // Iterate through the rows and insert data into 'solditems' table

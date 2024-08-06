@@ -82,10 +82,6 @@ Connection conn;
                     PreparedStatement pstProductDetails2 = conn.prepareStatement(sqlproductDetails2);
                     pstProductDetails2.setInt(1, productId);
                     
-                /*//This is the preparedStatement for the retrieved initial quantity of each item from sub_cost_price table
-                PreparedStatement pstProductDetails3 = conn.prepareStatement(sqlproductDetails3);
-                pstProductDetails3.setString(1, productName);*/
-                    
                 // These are now the resultsets to handle the data
                 ResultSet rstProductDetails = pstProductDetails.executeQuery();
                     ResultSet rstProductDetails2 = pstProductDetails2.executeQuery();
@@ -124,8 +120,8 @@ Connection conn;
             Logger.getLogger(counter.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        table2.setModel(model);
-        table2.setDefaultRenderer(Object.class, new CustomCellRenderer());
+        statisticstbl.setModel(model);
+        statisticstbl.setDefaultRenderer(Object.class, new CustomCellRenderer());
 
         // Revalidate and repaint the frame to show the updated UI
         revalidate();
@@ -169,9 +165,9 @@ Connection conn;
     }
     public void addProfits(){
         double sum = 0;
-        model = (DefaultTableModel) table2.getModel();
+        model = (DefaultTableModel) statisticstbl.getModel();
         for(int row=1;row<model.getRowCount();row++){
-        //start from 1 to skip the header row
+        //starting from 1 to skip the header row
         Object value = model.getValueAt(row, 7);
         if(value instanceof Number){
             double numericValue = ((Number)value).doubleValue();
@@ -187,11 +183,48 @@ Connection conn;
             totalprofits.setText(String.valueOf(sum));
             }
         }catch(NumberFormatException e){
-        //Handle or long invalid number format if necessary
+        //Handle or long invalid number format
         }
         }
         }
         
+    }
+    
+    public void sendData(){
+    DefaultTableModel model = (DefaultTableModel) statisticstbl.getModel();
+    int rowCount = model.getRowCount();
+    try {
+        String sql = "insert into profits(productid,productname,initialquantity,unitcost,totalcostprices,totalsales,stockquantity,profits,date) values(?,?,?,?,?,?,?,?)";
+
+        pst = conn.prepareStatement(sql);
+        
+        for (int i = 0; i < rowCount; i++){
+        int productid = Integer.parseInt(model.getValueAt(i, 0).toString());
+        String productname = model.getValueAt(i, 1).toString();
+        int initialquantity = Integer.parseInt(model.getValueAt(i, 2).toString());
+        Float unitcost = Float.valueOf(model.getValueAt(i, 3).toString());
+        float totalcostprices = Float.valueOf(model.getValueAt(i, 4).toString());
+        float totalsales = Float.valueOf(model.getValueAt(i, 5).toString());
+        int stockquantity = Integer.parseInt(model.getValueAt(i, 6).toString());
+        float profits = Float.valueOf(model.getValueAt(i, 7).toString());
+        pst.setInt(1, productid);
+        pst.setString(2, productname);
+        pst.setInt(3, initialquantity);
+        pst.setFloat(4, unitcost);
+        pst.setFloat(5, totalcostprices);
+        pst.setFloat(6, totalsales);
+        pst.setInt(7, stockquantity);
+        pst.setFloat(8, profits);
+        pst.executeUpdate(); 
+    }  
+        JOptionPane.showMessageDialog(null, "Data inserted sucessfully");   
+    } catch (SQLException ex) {
+        Logger.getLogger(Statistics_table.class.getName()).log(Level.SEVERE, null, ex);
+    }
+    
+    
+    
+    
     }
     /**
      * This method is called from within the constructor to initialize the form.
@@ -204,15 +237,16 @@ Connection conn;
 
         jLabel1 = new javax.swing.JLabel();
         jScrollPane2 = new javax.swing.JScrollPane();
-        table2 = new javax.swing.JTable();
+        statisticstbl = new javax.swing.JTable();
         jLabel2 = new javax.swing.JLabel();
         totalprofits = new javax.swing.JLabel();
+        jButton1 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
         jLabel1.setText("STATISTICS TABLE FOR LUCKY ELECTRICALS");
 
-        table2.setModel(new javax.swing.table.DefaultTableModel(
+        statisticstbl.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null, null, null},
                 {null, null, null, null},
@@ -223,11 +257,18 @@ Connection conn;
                 "Title 1", "Title 2", "Title 3", "Title 4"
             }
         ));
-        jScrollPane2.setViewportView(table2);
+        jScrollPane2.setViewportView(statisticstbl);
 
         jLabel2.setText("TOTAL PROFITS MADE");
 
         totalprofits.setFont(new java.awt.Font("Arial", 1, 20)); // NOI18N
+
+        jButton1.setText("test button");
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -237,9 +278,11 @@ Connection conn;
                 .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 409, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 171, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(43, 43, 43)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(totalprofits, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addContainerGap())
+                .addGap(33, 33, 33)
+                .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 96, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
             .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 1020, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
@@ -251,13 +294,18 @@ Connection conn;
                         .addContainerGap()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(totalprofits, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                            .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jButton1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 450, Short.MAX_VALUE))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        sendData();
+    }//GEN-LAST:event_jButton1ActionPerformed
 
     /**
      * @param args the command line arguments
@@ -273,10 +321,11 @@ Connection conn;
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JScrollPane jScrollPane2;
-    private javax.swing.JTable table2;
+    private javax.swing.JTable statisticstbl;
     private javax.swing.JLabel totalprofits;
     // End of variables declaration//GEN-END:variables
 

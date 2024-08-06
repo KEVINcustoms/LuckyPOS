@@ -56,7 +56,7 @@ ResultSet rst;
                 
          DefaultTableModel model = new DefaultTableModel();
         items.setModel(model);
-          model.addColumn("IID");
+        model.addColumn("IID");
         model.addColumn("BARCODE");
         model.addColumn("NAME");
         model.addColumn("QUANTITY");
