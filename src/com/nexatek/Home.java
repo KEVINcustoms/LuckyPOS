@@ -8,7 +8,12 @@ import java.awt.Toolkit;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.LocalDate;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 
 /**
  *
@@ -22,19 +27,121 @@ public class Home extends javax.swing.JFrame {
     Connection conn;
     ResultSet rst;
     PreparedStatement pst;
+    PreparedStatement pstInsert;
+    PreparedStatement pstInsertUpdate;
+    ResultSet rstInsertUpdate;
 
     public Home() {
         conn = connection.connect();
         initComponents();
         SwingUtilities.invokeLater(() -> {
-            sales_admin sladmin = new sales_admin();
+            sales_admin sladmin = new sales_admin(counter.getText());
             jpload.jPanelLoader(panel_load, sladmin);
         });
+        
+        Timer timer = new Timer(10000, e->
+        sendData());
+        timer.start();
 
         setExtendedState(Home.MAXIMIZED_BOTH);
         setLocationRelativeTo(null); // Center the frame
         setVisible(true);
     }
+    
+    public void sendData() {
+    String sqlProfit1 = "SELECT products.name AS name, products.productid AS productid, " +
+                        "products.cost_price AS unit_cost_price, sub_cost_price.quantity AS initQuantity, " +
+                        "sub_cost_price.sub_costp AS total_cost_prices " +
+                        "FROM products INNER JOIN sub_cost_price ON products.name = sub_cost_price.product_name";
+
+    String sqlProfitInsert = "INSERT INTO profits (productid, productname, initialquantity, unitcost, totalcostprices, totalsales, stockquantity, profits, profit_date) " +
+                             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+    String sqlProfitUpdate = "UPDATE profits SET profits = profits + ?, totalsales = ?, stockquantity = ? " +
+                             "WHERE productid = ? AND profit_date = ?";
+
+    try {
+        // Fetch product details with the join
+        PreparedStatement pst = conn.prepareStatement(sqlProfit1);
+        ResultSet rst = pst.executeQuery();
+
+        while (rst.next()) {
+            String productName = rst.getString("name");
+            int productId = rst.getInt("productid");
+            int initialQuantity = rst.getInt("initQuantity");
+            double unitCostPrice = rst.getDouble("unit_cost_price");
+            double totalCostPrice = rst.getDouble("total_cost_prices");
+
+            // Fetch total sales for the product
+            String sqlTotalSales = "SELECT SUM(paid_amount) AS totalsales FROM solditems WHERE itemid = ?";
+            PreparedStatement pstTotalSales = conn.prepareStatement(sqlTotalSales);
+            pstTotalSales.setInt(1, productId);
+            ResultSet rstTotalSales = pstTotalSales.executeQuery();
+
+            double totalSales = 0;
+            if (rstTotalSales.next()) {
+                totalSales = rstTotalSales.getDouble("totalsales");
+            }
+
+            // Calculate profit for the day
+            double profitCalculation = totalSales - totalCostPrice;
+            LocalDate profitDate = LocalDate.now();
+
+            // Check if a profit entry already exists for the current day
+            String sqlCheckProfit = "SELECT productid FROM profits WHERE productid = ? AND profit_date = ?";
+            PreparedStatement pstCheckProfit = conn.prepareStatement(sqlCheckProfit);
+            pstCheckProfit.setInt(1, productId);
+            pstCheckProfit.setDate(2, java.sql.Date.valueOf(profitDate));
+            ResultSet rstCheckProfit = pstCheckProfit.executeQuery();
+
+            if (rstCheckProfit.next()) {
+                if(rst.getInt("productid") == rstCheckProfit.getInt("productid") && rstCheckProfit.getString("profit_date") == profitDate.toString()){
+                    // Update the existing record by adding the new profit to the existing one
+                PreparedStatement pstUpdate = conn.prepareStatement(sqlProfitUpdate);
+                pstUpdate.setDouble(1, profitCalculation);
+                pstUpdate.setDouble(2, totalSales);
+                pstUpdate.setInt(3, initialQuantity);
+                pstUpdate.setInt(4, productId);
+                pstUpdate.setDate(5, java.sql.Date.valueOf(profitDate));
+                pstUpdate.executeUpdate();
+
+                Logger.getLogger(counter.class.getName()).log(Level.INFO, "Updated profits for productid: {0} on date: {1}", new Object[]{productId, profitDate});
+                }
+                
+            } else {
+                if(rst.getInt("productid") != rstCheckProfit.getInt("productid") && rstCheckProfit.getString("profit_date") != profitDate.toString()){
+                    // Insert a new record for the current day
+                PreparedStatement pstInsert = conn.prepareStatement(sqlProfitInsert);
+                pstInsert.setInt(1, productId);
+                pstInsert.setString(2, productName);
+                pstInsert.setInt(3, initialQuantity);
+                pstInsert.setDouble(4, unitCostPrice);
+                pstInsert.setDouble(5, totalCostPrice);
+                pstInsert.setDouble(6, totalSales);
+                pstInsert.setInt(7, initialQuantity);
+                pstInsert.setDouble(8, profitCalculation);
+                pstInsert.setDate(9, java.sql.Date.valueOf(profitDate));
+                pstInsert.executeUpdate();
+
+                Logger.getLogger(counter.class.getName()).log(Level.INFO, "Inserted profits for productid: {0} on date: {1}", new Object[]{productId, profitDate});
+                }
+                
+            }
+
+            // Close the result sets and statements for each loop iteration
+            rstTotalSales.close();
+            pstTotalSales.close();
+            rstCheckProfit.close();
+            pstCheckProfit.close();
+        }
+
+        // Close the initial prepared statement and result set
+        rst.close();
+        pst.close();
+    } catch (SQLException ex) {
+        Logger.getLogger(counter.class.getName()).log(Level.SEVERE, null, ex);
+    }
+}
 
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -342,7 +449,7 @@ public class Home extends javax.swing.JFrame {
 
     private void jToggleButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jToggleButton5ActionPerformed
 
-        sales_admin sales = new sales_admin();
+        sales_admin sales = new sales_admin(counter.getText());
         //this.setVisible(true);
         jpload.jPanelLoader(panel_load, sales);
     }//GEN-LAST:event_jToggleButton5ActionPerformed

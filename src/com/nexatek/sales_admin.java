@@ -52,8 +52,10 @@ public class sales_admin extends javax.swing.JPanel {
  static String customer_name;
   static String telephone_number;
   static Float cash;
+  String usertext;
  
-     public sales_admin() {
+     public sales_admin(String user) {
+         this.usertext = user;
         conn= connection.connect();
         initComponents();
         items.getTableHeader().setFont( new Font("segoe UI", Font.BOLD,18));
@@ -69,6 +71,7 @@ public class sales_admin extends javax.swing.JPanel {
         model.addColumn("QUANTITY");
         model.addColumn("UNIT-PRICE");
         model.addColumn("SUB-TOTAL");
+        counter.setText(usertext);
         currentdate();
         calculateTotal();
         InvoiceNumbers();   
@@ -330,7 +333,7 @@ private void updateCombo(){
         }
     }
 }
-
+   
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -396,7 +399,7 @@ private void updateCombo(){
         stock_qty.setBackground(new java.awt.Color(0, 0, 0));
         stock_qty.setFont(new java.awt.Font("Cantarell", 1, 18)); // NOI18N
 
-        counter.setFont(new java.awt.Font("Noto Sans CJK SC Black", 1, 18)); // NOI18N
+        counter.setFont(new java.awt.Font("Noto Sans CJK SC Black", 1, 14)); // NOI18N
         counter.setText("mm-001");
 
         date.setFont(new java.awt.Font("Noto Sans", 1, 18)); // NOI18N
