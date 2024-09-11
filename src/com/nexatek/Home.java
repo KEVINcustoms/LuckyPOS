@@ -10,6 +10,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.SwingUtilities;
@@ -25,11 +27,7 @@ public class Home extends javax.swing.JFrame {
     JpanelLoader jpload = new JpanelLoader();
 
     Connection conn;
-    ResultSet rst;
-    PreparedStatement pst;
-    PreparedStatement pstInsert;
-    PreparedStatement pstInsertUpdate;
-    ResultSet rstInsertUpdate;
+ 
 
     public Home() {
         conn = connection.connect();
@@ -49,7 +47,7 @@ public class Home extends javax.swing.JFrame {
     }
     
     public void sendData() {
-    String sqlProfit1 = "SELECT products.name AS name, products.productid AS productid, " +
+    String allDataQuery = "SELECT products.name AS name, products.productid AS productid, " +
                         "products.cost_price AS unit_cost_price, sub_cost_price.quantity AS initQuantity, " +
                         "sub_cost_price.sub_costp AS total_cost_prices " +
                         "FROM products INNER JOIN sub_cost_price ON products.name = sub_cost_price.product_name";
@@ -59,10 +57,13 @@ public class Home extends javax.swing.JFrame {
 
     String sqlProfitUpdate = "UPDATE profits SET profits = profits + ?, totalsales = ?, stockquantity = ? " +
                              "WHERE productid = ? AND profit_date = ?";
+    String sqlProfitDate = "select profit_date from profits";
+   
+    
 
     try {
         // Fetch product details with the join
-        PreparedStatement pst = conn.prepareStatement(sqlProfit1);
+        PreparedStatement pst = conn.prepareStatement(allDataQuery);
         ResultSet rst = pst.executeQuery();
 
         while (rst.next()) {
@@ -82,6 +83,16 @@ public class Home extends javax.swing.JFrame {
             if (rstTotalSales.next()) {
                 totalSales = rstTotalSales.getDouble("totalsales");
             }
+            rstTotalSales.close(); 
+            
+            PreparedStatement pstProfitDate = conn.prepareStatement(sqlProfitDate);
+            String profitDateFromDatabase = null;
+            ResultSet rstProfitDate = pstProfitDate.executeQuery();
+            while (rstProfitDate.next()) {
+                profitDateFromDatabase = rstProfitDate.getString("profit_date");
+            }
+            pstProfitDate.close();
+            rstProfitDate.close();
 
             // Calculate profit for the day
             double profitCalculation = totalSales - totalCostPrice;
@@ -93,9 +104,23 @@ public class Home extends javax.swing.JFrame {
             pstCheckProfit.setInt(1, productId);
             pstCheckProfit.setDate(2, java.sql.Date.valueOf(profitDate));
             ResultSet rstCheckProfit = pstCheckProfit.executeQuery();
+            int foundProductId = 0;
+            
 
-            if (rstCheckProfit.next()) {
-                if(rst.getInt("productid") == rstCheckProfit.getInt("productid") && rstCheckProfit.getString("profit_date") == profitDate.toString()){
+            //Profit date exists
+            while (rstCheckProfit.next()) {
+                foundProductId = rstCheckProfit.getInt("productid");
+            }
+            
+            pstCheckProfit.close();
+            rstCheckProfit.close();
+            
+            // There was a profit already saved in the database
+            if (foundProductId != 0) {
+                 // && rstCheckProfit.getString("profit_date") == profitDate.toString()
+                 System.out.println("profitDateFromDatabase : " + profitDateFromDatabase);
+                 System.out.println("profitDate : " + profitDate.toString());
+                if (profitDateFromDatabase.equals(profitDate.toString() )) {
                     // Update the existing record by adding the new profit to the existing one
                 PreparedStatement pstUpdate = conn.prepareStatement(sqlProfitUpdate);
                 pstUpdate.setDouble(1, profitCalculation);
@@ -108,8 +133,9 @@ public class Home extends javax.swing.JFrame {
                 Logger.getLogger(counter.class.getName()).log(Level.INFO, "Updated profits for productid: {0} on date: {1}", new Object[]{productId, profitDate});
                 }
                 
-            } else {
-                if(rst.getInt("productid") != rstCheckProfit.getInt("productid") && rstCheckProfit.getString("profit_date") != profitDate.toString()){
+            } 
+            //There was a profit already saved in the database
+            else {
                     // Insert a new record for the current day
                 PreparedStatement pstInsert = conn.prepareStatement(sqlProfitInsert);
                 pstInsert.setInt(1, productId);
@@ -124,15 +150,16 @@ public class Home extends javax.swing.JFrame {
                 pstInsert.executeUpdate();
 
                 Logger.getLogger(counter.class.getName()).log(Level.INFO, "Inserted profits for productid: {0} on date: {1}", new Object[]{productId, profitDate});
-                }
-                
             }
+                
+                // && rstCheckProfit.getString("profit_date") != profitDate.toString()
+                
+                
 
             // Close the result sets and statements for each loop iteration
             rstTotalSales.close();
             pstTotalSales.close();
-            rstCheckProfit.close();
-            pstCheckProfit.close();
+            
         }
 
         // Close the initial prepared statement and result set

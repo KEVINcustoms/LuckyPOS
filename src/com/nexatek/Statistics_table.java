@@ -53,7 +53,14 @@ Connection conn;
 
         // For the profits calculations
         //String sqlprofit1 = "SELECT name,productid FROM products";
-        String sqlprofit1 = "select products.name as name,products.productid as productid,products.cost_price as unit_cost_price,sub_cost_price.quantity as initQuantity,sub_cost_price.sub_costp as total_cost_prices from products inner join sub_cost_price on products.name = sub_cost_price.product_name";
+        String sqlprofit1 = 
+                "select products.name as name,"
+                + "products.productid as productid,"
+                + "products.cost_price as unit_cost_price,"
+                + "sub_cost_price.quantity as initQuantity,"
+                + "sub_cost_price.sub_costp as total_cost_prices from products "
+                + "inner join sub_cost_price on products.name = "
+                + "sub_cost_price.product_name";
         try {
             pst = conn.prepareStatement(sqlprofit1);
             rst = pst.executeQuery();
@@ -96,7 +103,9 @@ Connection conn;
                 if (rstProductDetails.next()) {
                     double cost_prices = rstProductDetails.getDouble("cost_price");
                     int quantities = rstProductDetails.getInt("quantity");
-                    double profitCalculation = (rstProductDetails2.getDouble("totalsales"))- total_cost_price;
+                    double profitCalculation = (rstProductDetails2.getDouble
+                    ("totalsales"))- total_cost_price;
+                    System.out.println("profitCalculation : " + profitCalculation);
                     Vector<Object> row = new Vector<>();
                     row.add(productId);
                     row.add(productName);
