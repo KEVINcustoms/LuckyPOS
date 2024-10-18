@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
- */
 package com.nexatek;
 
 import java.awt.Toolkit;
@@ -46,11 +42,124 @@ public class Home extends javax.swing.JFrame {
         setVisible(true);
     }
     
-    public void sendData() {
+  public void sendData() {
     String allDataQuery = "SELECT products.name AS name, products.productid AS productid, " +
-                        "products.cost_price AS unit_cost_price, sub_cost_price.quantity AS initQuantity, " +
-                        "sub_cost_price.sub_costp AS total_cost_prices " +
-                        "FROM products INNER JOIN sub_cost_price ON products.name = sub_cost_price.product_name";
+                          "products.cost_price AS unit_cost_price, products.quantity AS quantity, " +
+                          "sub_cost_price.quantity AS initQuantity, " +
+                          "sub_cost_price.sub_costp AS total_cost_prices " +
+                          "FROM products INNER JOIN sub_cost_price ON products.name = sub_cost_price.product_name";
+
+    String sqlProfitInsert = "INSERT INTO profits (productid, productname, initialquantity, unitcost, totalcostprices, totalsales, stockquantity, profits, profit_date) " +
+                             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+    String sqlProfitUpdate = "UPDATE profits SET profits = profits + ?, totalsales = ?, stockquantity = ? " +
+                             "WHERE productid = ? AND profit_date = ?";
+
+    PreparedStatement pst = null;
+    ResultSet rst = null;
+
+    try {
+        // Fetch product details with the join
+        pst = conn.prepareStatement(allDataQuery);
+        rst = pst.executeQuery();
+
+        while (rst.next()) {
+            String productName = rst.getString("name");
+            int productId = rst.getInt("productid");
+            int initialQuantity = rst.getInt("initQuantity");
+            int stockQuantity = rst.getInt("quantity");
+            double unitCostPrice = rst.getDouble("unit_cost_price");
+            double totalCostPrice = rst.getDouble("total_cost_prices");
+
+            // Fetch sales for the product for the current day
+            String sqlNewSales = "SELECT paid_amount FROM solditems WHERE itemid = ? AND selldate = ?";
+            LocalDate profitDate = LocalDate.now();
+            try (PreparedStatement pstNewSales = conn.prepareStatement(sqlNewSales)) {
+                pstNewSales.setInt(1, productId);
+                pstNewSales.setDate(2, java.sql.Date.valueOf(profitDate));
+
+                try (ResultSet rstNewSales = pstNewSales.executeQuery()) {
+                    double newSales = 0;
+
+                    // Process the results to get the exact sales for the day
+                    while (rstNewSales.next()) {
+                        newSales += rstNewSales.getDouble("paid_amount");
+                    }
+
+                    // Calculate profit for the day
+                    double profitCalculation = newSales - totalCostPrice;
+
+                    // Check if there's already an entry for this product today
+                    String sqlCheckProfit = "SELECT productid, profits, totalsales FROM profits WHERE productid = ? AND profit_date = ?";
+                    try (PreparedStatement pstCheckProfit = conn.prepareStatement(sqlCheckProfit)) {
+                        pstCheckProfit.setInt(1, productId);
+                        pstCheckProfit.setDate(2, java.sql.Date.valueOf(profitDate));
+
+                        try (ResultSet rstCheckProfit = pstCheckProfit.executeQuery()) {
+
+                            // If there's an entry for today, update the profits
+                            if (rstCheckProfit.next()) {
+                                double existingSales = rstCheckProfit.getDouble("totalsales");
+
+                                // Check if there are new sales, only update if there are new sales
+                                if (newSales > existingSales) {
+                                    try (PreparedStatement pstUpdate = conn.prepareStatement(sqlProfitUpdate)) {
+                                        pstUpdate.setDouble(1, profitCalculation); // Increment the profits
+                                        pstUpdate.setDouble(2, newSales); // Update total sales
+                                        pstUpdate.setInt(3, stockQuantity); // Update stock quantity
+                                        pstUpdate.setInt(4, productId);
+                                        pstUpdate.setDate(5, java.sql.Date.valueOf(profitDate));
+                                        pstUpdate.executeUpdate();
+
+                                        Logger.getLogger(counter.class.getName()).log(Level.INFO, "Updated profits for productid: {0} on date: {1}", new Object[]{productId, profitDate});
+                                    }
+                                }
+                            }
+
+                            // Separate logic: Insert a new entry only if there are new sales for today
+                            if (newSales > 0 && profitDate.equals(LocalDate.now())) {
+                                // Insert new profit data since there are new sales for today
+                                try (PreparedStatement pstInsert = conn.prepareStatement(sqlProfitInsert)) {
+                                    pstInsert.setInt(1, productId);
+                                    pstInsert.setString(2, productName);
+                                    pstInsert.setInt(3, initialQuantity);
+                                    pstInsert.setDouble(4, unitCostPrice);
+                                    pstInsert.setDouble(5, totalCostPrice);
+                                    pstInsert.setDouble(6, newSales); // Using new sales here
+                                    pstInsert.setInt(7, stockQuantity);
+                                    pstInsert.setDouble(8, profitCalculation);
+                                    pstInsert.setDate(9, java.sql.Date.valueOf(profitDate));
+                                    pstInsert.executeUpdate();
+
+                                    Logger.getLogger(counter.class.getName()).log(Level.INFO, "Inserted new profits for productid: {0} on date: {1}", new Object[]{productId, profitDate});
+                                }
+                            } else {
+                                Logger.getLogger(counter.class.getName()).log(Level.INFO, "No new sales or not the current date for productid: {0}, skipping insertion.", productId);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    } catch (SQLException ex) {
+        Logger.getLogger(counter.class.getName()).log(Level.SEVERE, null, ex);
+    } finally {
+        try {
+            if (rst != null) rst.close();
+            if (pst != null) pst.close();
+        } catch (SQLException e) {
+            Logger.getLogger(counter.class.getName()).log(Level.SEVERE, null, e);
+        }
+    }
+}
+
+    
+    /*
+    public void sendData() {
+    String allDataQuery ="SELECT products.name AS name, products.productid AS productid, " +
+                         "products.cost_price AS unit_cost_price, sub_cost_price.quantity AS initQuantity, " +
+                         "sub_cost_price.sub_costp AS total_cost_prices " +
+                         "FROM products INNER JOIN sub_cost_price ON products.name = sub_cost_price.product_name";
 
     String sqlProfitInsert = "INSERT INTO profits (productid, productname, initialquantity, unitcost, totalcostprices, totalsales, stockquantity, profits, profit_date) " +
                              "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -97,6 +206,7 @@ public class Home extends javax.swing.JFrame {
             // Calculate profit for the day
             double profitCalculation = totalSales - totalCostPrice;
             LocalDate profitDate = LocalDate.now();
+            
 
             // Check if a profit entry already exists for the current day
             String sqlCheckProfit = "SELECT productid FROM profits WHERE productid = ? AND profit_date = ?";
@@ -169,7 +279,7 @@ public class Home extends javax.swing.JFrame {
         Logger.getLogger(counter.class.getName()).log(Level.SEVERE, null, ex);
     }
 }
-
+*/
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
