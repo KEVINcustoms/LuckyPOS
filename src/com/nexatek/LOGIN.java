@@ -149,6 +149,7 @@ PreparedStatement pst;
                 this.setVisible(false);
                 Home e = new Home();
                 e.pack();
+                e.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
                 e.counter.setText(username.getText());
                 e.setVisible(true); 
                  JOptionPane.showMessageDialog(null, "Welcome... "+username.getText());
