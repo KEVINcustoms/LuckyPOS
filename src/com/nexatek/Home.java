@@ -25,9 +25,29 @@ public class Home extends javax.swing.JFrame {
     Connection conn;
  
 
+    // Variables for custom title bar dragging
+    private int mouseX, mouseY;
+    private boolean isMaximized = true;
+    private java.awt.Rectangle normalBounds;
+    
     public Home() {
         conn = connection.connect();
+        
+        // Make window undecorated for custom title bar
+        setUndecorated(true);
+        
         initComponents();
+        
+        // Set application icon for taskbar
+        try {
+            setIconImage(new javax.swing.ImageIcon(getClass().getResource("/com/nexatek/images/necxtek logo.png")).getImage());
+        } catch (Exception e) {
+            System.out.println("Could not load icon: " + e.getMessage());
+        }
+        
+        // Setup custom title bar with logo and buttons
+        setupCustomTitleBar();
+        
         SwingUtilities.invokeLater(() -> {
             sales_admin sladmin = new sales_admin(counter.getText());
             jpload.jPanelLoader(panel_load, sladmin);
@@ -38,8 +58,197 @@ public class Home extends javax.swing.JFrame {
         timer.start();
 
         setExtendedState(Home.MAXIMIZED_BOTH);
-        setLocationRelativeTo(null); // Center the frame
+        setLocationRelativeTo(null);
         setVisible(true);
+    }
+    
+    private void setupCustomTitleBar() {
+        // Transform jPanel3 into a custom title bar
+        jPanel3.setLayout(new java.awt.BorderLayout(10, 0));
+        jPanel3.setBackground(new java.awt.Color(25, 42, 65));
+        jPanel3.setPreferredSize(new java.awt.Dimension(0, 45));
+        jPanel3.setBorder(javax.swing.BorderFactory.createEmptyBorder(5, 10, 5, 5));
+        
+        // LEFT: Logo + Title
+        javax.swing.JPanel leftPanel = new javax.swing.JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 10, 0));
+        leftPanel.setOpaque(false);
+        
+        // Logo
+        javax.swing.JLabel logoLabel = new javax.swing.JLabel();
+        try {
+            javax.swing.ImageIcon logoIcon = new javax.swing.ImageIcon(getClass().getResource("/com/nexatek/images/necxtek logo.png"));
+            java.awt.Image scaledLogo = logoIcon.getImage().getScaledInstance(32, 32, java.awt.Image.SCALE_SMOOTH);
+            logoLabel.setIcon(new javax.swing.ImageIcon(scaledLogo));
+        } catch (Exception e) {
+            logoLabel.setText("N");
+            logoLabel.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 24));
+            logoLabel.setForeground(new java.awt.Color(255, 193, 7));
+        }
+        
+        // Title
+        jLabel1.setText("LUCKY ELECTRICALS");
+        jLabel1.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 20));
+        jLabel1.setForeground(java.awt.Color.WHITE);
+        
+        leftPanel.add(logoLabel);
+        leftPanel.add(jLabel1);
+        
+        // CENTER: Custom action buttons
+        javax.swing.JPanel centerPanel = new javax.swing.JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.CENTER, 8, 0));
+        centerPanel.setOpaque(false);
+        
+        java.awt.Font btnFont = new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 11);
+        java.awt.Dimension btnSize = new java.awt.Dimension(90, 30);
+        
+        // Settings
+        btnSettings = createTitleBarButton("Settings", new java.awt.Color(41, 128, 185), btnFont, btnSize);
+        btnSettings.addActionListener(e -> btnSettingsActionPerformed());
+        
+        // Alerts
+        btnNotifications = createTitleBarButton("Alerts", new java.awt.Color(230, 126, 34), btnFont, btnSize);
+        btnNotifications.addActionListener(e -> btnNotificationsActionPerformed());
+        
+        // Backup
+        btnBackup = createTitleBarButton("Backup", new java.awt.Color(142, 68, 173), btnFont, btnSize);
+        btnBackup.addActionListener(e -> btnBackupActionPerformed());
+        
+        // Help
+        btnHelp = createTitleBarButton("Help", new java.awt.Color(52, 73, 94), btnFont, btnSize);
+        btnHelp.addActionListener(e -> btnHelpActionPerformed());
+        
+        // About
+        btnAbout = createTitleBarButton("About", new java.awt.Color(52, 73, 94), btnFont, btnSize);
+        btnAbout.addActionListener(e -> btnAboutActionPerformed());
+        
+        centerPanel.add(btnSettings);
+        centerPanel.add(btnNotifications);
+        centerPanel.add(btnBackup);
+        centerPanel.add(btnHelp);
+        centerPanel.add(btnAbout);
+        
+        // RIGHT: Window control buttons (minimize, maximize, close)
+        javax.swing.JPanel controlPanel = new javax.swing.JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.RIGHT, 0, 0));
+        controlPanel.setOpaque(false);
+        
+        // Minimize button
+        javax.swing.JButton btnMinimize = new javax.swing.JButton("_");
+        btnMinimize.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 16));
+        btnMinimize.setPreferredSize(new java.awt.Dimension(45, 35));
+        btnMinimize.setForeground(java.awt.Color.WHITE);
+        btnMinimize.setBackground(new java.awt.Color(25, 42, 65));
+        btnMinimize.setBorderPainted(false);
+        btnMinimize.setFocusPainted(false);
+        btnMinimize.addActionListener(e -> setState(java.awt.Frame.ICONIFIED));
+        btnMinimize.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent e) { btnMinimize.setBackground(new java.awt.Color(60, 80, 100)); }
+            public void mouseExited(java.awt.event.MouseEvent e) { btnMinimize.setBackground(new java.awt.Color(25, 42, 65)); }
+        });
+        
+        // Maximize/Restore button
+        javax.swing.JButton btnMaximize = new javax.swing.JButton("[ ]");
+        btnMaximize.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 12));
+        btnMaximize.setPreferredSize(new java.awt.Dimension(45, 35));
+        btnMaximize.setForeground(java.awt.Color.WHITE);
+        btnMaximize.setBackground(new java.awt.Color(25, 42, 65));
+        btnMaximize.setBorderPainted(false);
+        btnMaximize.setFocusPainted(false);
+        btnMaximize.addActionListener(e -> {
+            if (isMaximized) {
+                // Restore
+                if (normalBounds != null) {
+                    setBounds(normalBounds);
+                } else {
+                    setSize(1200, 800);
+                    setLocationRelativeTo(null);
+                }
+                isMaximized = false;
+                btnMaximize.setText("[ ]");
+            } else {
+                // Maximize
+                normalBounds = getBounds();
+                setExtendedState(java.awt.Frame.MAXIMIZED_BOTH);
+                isMaximized = true;
+                btnMaximize.setText("[=]");
+            }
+        });
+        btnMaximize.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent e) { btnMaximize.setBackground(new java.awt.Color(60, 80, 100)); }
+            public void mouseExited(java.awt.event.MouseEvent e) { btnMaximize.setBackground(new java.awt.Color(25, 42, 65)); }
+        });
+        
+        // Close button
+        javax.swing.JButton btnClose = new javax.swing.JButton("X");
+        btnClose.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 14));
+        btnClose.setPreferredSize(new java.awt.Dimension(45, 35));
+        btnClose.setForeground(java.awt.Color.WHITE);
+        btnClose.setBackground(new java.awt.Color(25, 42, 65));
+        btnClose.setBorderPainted(false);
+        btnClose.setFocusPainted(false);
+        btnClose.addActionListener(e -> System.exit(0));
+        btnClose.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent e) { btnClose.setBackground(new java.awt.Color(220, 53, 69)); }
+            public void mouseExited(java.awt.event.MouseEvent e) { btnClose.setBackground(new java.awt.Color(25, 42, 65)); }
+        });
+        
+        controlPanel.add(btnMinimize);
+        controlPanel.add(btnMaximize);
+        controlPanel.add(btnClose);
+        
+        // Add all panels to title bar
+        jPanel3.removeAll();
+        jPanel3.add(leftPanel, java.awt.BorderLayout.WEST);
+        jPanel3.add(centerPanel, java.awt.BorderLayout.CENTER);
+        jPanel3.add(controlPanel, java.awt.BorderLayout.EAST);
+        
+        // Make title bar draggable
+        jPanel3.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mousePressed(java.awt.event.MouseEvent e) {
+                mouseX = e.getX();
+                mouseY = e.getY();
+            }
+        });
+        jPanel3.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
+            public void mouseDragged(java.awt.event.MouseEvent e) {
+                if (!isMaximized) {
+                    setLocation(e.getXOnScreen() - mouseX, e.getYOnScreen() - mouseY);
+                }
+            }
+        });
+    }
+    
+    private javax.swing.JButton createTitleBarButton(String text, java.awt.Color bg, java.awt.Font font, java.awt.Dimension size) {
+        javax.swing.JButton btn = new javax.swing.JButton(text);
+        btn.setFont(font);
+        btn.setBackground(bg);
+        btn.setForeground(java.awt.Color.WHITE);
+        btn.setPreferredSize(size);
+        btn.setBorderPainted(false);
+        btn.setFocusPainted(false);
+        btn.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        return btn;
+    }
+    
+    // Placeholder methods for button actions - to be implemented later
+    private void btnSettingsActionPerformed() {
+        javax.swing.JOptionPane.showMessageDialog(this, "Settings - Coming Soon!", "Settings", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+    }
+    
+    private void btnNotificationsActionPerformed() {
+        javax.swing.JOptionPane.showMessageDialog(this, "Notifications - Coming Soon!", "Alerts", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+    }
+    
+    private void btnBackupActionPerformed() {
+        javax.swing.JOptionPane.showMessageDialog(this, "Backup - Coming Soon!", "Backup", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+    }
+    
+    private void btnHelpActionPerformed() {
+        javax.swing.JOptionPane.showMessageDialog(this, "Help & Documentation - Coming Soon!", "Help", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+    }
+    
+    private void btnAboutActionPerformed() {
+        javax.swing.JOptionPane.showMessageDialog(this, 
+            "Lucky Electricals POS System\nVersion 1.0.0\n\nPowered by Nexatek Group\n© 2024 All Rights Reserved", 
+            "About", javax.swing.JOptionPane.INFORMATION_MESSAGE);
     }
     
   public void sendData() {
@@ -308,8 +517,9 @@ public class Home extends javax.swing.JFrame {
         jPanel1.setBorder(javax.swing.BorderFactory.createEtchedBorder());
 
         jToggleButton2.setBackground(new java.awt.Color(255, 204, 102));
+        jToggleButton2.setForeground(new java.awt.Color(30, 30, 30)); // Dark text on yellow
         home_bnt_grp.add(jToggleButton2);
-        jToggleButton2.setFont(new java.awt.Font("Cantarell", 1, 17)); // NOI18N
+        jToggleButton2.setFont(new java.awt.Font("Segoe UI", 1, 17)); // NOI18N
         jToggleButton2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/nexatek/images/img/emp.png"))); // NOI18N
         jToggleButton2.setText("Employee");
         jToggleButton2.addActionListener(new java.awt.event.ActionListener() {
@@ -319,8 +529,9 @@ public class Home extends javax.swing.JFrame {
         });
 
         jToggleButton3.setBackground(new java.awt.Color(0, 153, 255));
+        jToggleButton3.setForeground(java.awt.Color.WHITE); // White text on blue
         home_bnt_grp.add(jToggleButton3);
-        jToggleButton3.setFont(new java.awt.Font("Cantarell", 1, 17)); // NOI18N
+        jToggleButton3.setFont(new java.awt.Font("Segoe UI", 1, 17)); // NOI18N
         jToggleButton3.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/nexatek/images/img/customer.png"))); // NOI18N
         jToggleButton3.setText("Technicians");
         jToggleButton3.addActionListener(new java.awt.event.ActionListener() {
@@ -330,8 +541,9 @@ public class Home extends javax.swing.JFrame {
         });
 
         jToggleButton4.setBackground(new java.awt.Color(204, 0, 0));
+        jToggleButton4.setForeground(java.awt.Color.WHITE); // White text on red
         home_bnt_grp.add(jToggleButton4);
-        jToggleButton4.setFont(new java.awt.Font("Cantarell", 1, 17)); // NOI18N
+        jToggleButton4.setFont(new java.awt.Font("Segoe UI", 1, 17)); // NOI18N
         jToggleButton4.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/nexatek/images/img/product.png"))); // NOI18N
         jToggleButton4.setText("Product");
         jToggleButton4.addActionListener(new java.awt.event.ActionListener() {
@@ -341,8 +553,9 @@ public class Home extends javax.swing.JFrame {
         });
 
         jToggleButton5.setBackground(new java.awt.Color(0, 153, 51));
+        jToggleButton5.setForeground(java.awt.Color.WHITE); // White text on green
         home_bnt_grp.add(jToggleButton5);
-        jToggleButton5.setFont(new java.awt.Font("Cantarell", 1, 17)); // NOI18N
+        jToggleButton5.setFont(new java.awt.Font("Segoe UI", 1, 17)); // NOI18N
         jToggleButton5.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/nexatek/images/img/sales_menu.png"))); // NOI18N
         jToggleButton5.setText("Sales");
         jToggleButton5.addActionListener(new java.awt.event.ActionListener() {
@@ -352,8 +565,9 @@ public class Home extends javax.swing.JFrame {
         });
 
         jToggleButton6.setBackground(new java.awt.Color(255, 204, 102));
+        jToggleButton6.setForeground(new java.awt.Color(30, 30, 30)); // Dark text on yellow
         home_bnt_grp.add(jToggleButton6);
-        jToggleButton6.setFont(new java.awt.Font("Cantarell", 1, 17)); // NOI18N
+        jToggleButton6.setFont(new java.awt.Font("Segoe UI", 1, 17)); // NOI18N
         jToggleButton6.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/nexatek/images/img/invo.png"))); // NOI18N
         jToggleButton6.setText("Invoice");
         jToggleButton6.addActionListener(new java.awt.event.ActionListener() {
@@ -363,8 +577,9 @@ public class Home extends javax.swing.JFrame {
         });
 
         jToggleButton7.setBackground(new java.awt.Color(0, 153, 255));
+        jToggleButton7.setForeground(java.awt.Color.WHITE); // White text on blue
         home_bnt_grp.add(jToggleButton7);
-        jToggleButton7.setFont(new java.awt.Font("Cantarell", 1, 17)); // NOI18N
+        jToggleButton7.setFont(new java.awt.Font("Segoe UI", 1, 17)); // NOI18N
         jToggleButton7.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/nexatek/images/img/reports.png"))); // NOI18N
         jToggleButton7.setText("Reports");
         jToggleButton7.addActionListener(new java.awt.event.ActionListener() {
@@ -374,8 +589,9 @@ public class Home extends javax.swing.JFrame {
         });
 
         jToggleButton8.setBackground(new java.awt.Color(255, 204, 102));
+        jToggleButton8.setForeground(new java.awt.Color(30, 30, 30)); // Dark text on yellow
         home_bnt_grp.add(jToggleButton8);
-        jToggleButton8.setFont(new java.awt.Font("Cantarell", 1, 17)); // NOI18N
+        jToggleButton8.setFont(new java.awt.Font("Segoe UI", 1, 17)); // NOI18N
         jToggleButton8.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/nexatek/images/img/customer.png"))); // NOI18N
         jToggleButton8.setText("Customers");
         jToggleButton8.addActionListener(new java.awt.event.ActionListener() {
@@ -384,7 +600,9 @@ public class Home extends javax.swing.JFrame {
             }
         });
 
-        jToggleButton9.setFont(new java.awt.Font("Cantarell", 1, 17)); // NOI18N
+        jToggleButton9.setBackground(new java.awt.Color(52, 73, 94)); // Dark blue-gray
+        jToggleButton9.setForeground(java.awt.Color.WHITE); // White text
+        jToggleButton9.setFont(new java.awt.Font("Segoe UI", 1, 17)); // NOI18N
         jToggleButton9.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/nexatek/images/img/icons8-exit-50.png"))); // NOI18N
         jToggleButton9.setText("LOGOUT");
         jToggleButton9.addActionListener(new java.awt.event.ActionListener() {
@@ -394,8 +612,9 @@ public class Home extends javax.swing.JFrame {
         });
 
         jToggleButton10.setBackground(new java.awt.Color(204, 0, 0));
+        jToggleButton10.setForeground(java.awt.Color.WHITE); // White text on red
         home_bnt_grp.add(jToggleButton10);
-        jToggleButton10.setFont(new java.awt.Font("Cantarell", 1, 17)); // NOI18N
+        jToggleButton10.setFont(new java.awt.Font("Segoe UI", 1, 17)); // NOI18N
         jToggleButton10.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/nexatek/images/img/product.png"))); // NOI18N
         jToggleButton10.setText("OUT OF STOCK");
         jToggleButton10.addActionListener(new java.awt.event.ActionListener() {
@@ -404,6 +623,8 @@ public class Home extends javax.swing.JFrame {
             }
         });
 
+        poweroff.setBackground(new java.awt.Color(192, 57, 43)); // Dark red
+        poweroff.setForeground(java.awt.Color.WHITE); // White text
         poweroff.setFont(new java.awt.Font("Segoe UI", 1, 17)); // NOI18N
         poweroff.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/nexatek/images/img/icons8-power-off-48.png"))); // NOI18N
         poweroff.setText("Power Off");
@@ -416,8 +637,9 @@ public class Home extends javax.swing.JFrame {
         counter.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
 
         jToggleButton11.setBackground(new java.awt.Color(0, 153, 51));
+        jToggleButton11.setForeground(java.awt.Color.WHITE); // White text on green
         home_bnt_grp.add(jToggleButton11);
-        jToggleButton11.setFont(new java.awt.Font("Cantarell", 1, 17)); // NOI18N
+        jToggleButton11.setFont(new java.awt.Font("Segoe UI", 1, 17)); // NOI18N
         jToggleButton11.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/nexatek/images/img/supplier.png"))); // NOI18N
         jToggleButton11.setText("Expenditures");
         jToggleButton11.addActionListener(new java.awt.event.ActionListener() {
@@ -427,8 +649,9 @@ public class Home extends javax.swing.JFrame {
         });
 
         jToggleButton1.setBackground(new java.awt.Color(0, 153, 51));
+        jToggleButton1.setForeground(java.awt.Color.WHITE); // White text on green
         home_bnt_grp.add(jToggleButton1);
-        jToggleButton1.setFont(new java.awt.Font("Cantarell", 1, 17)); // NOI18N
+        jToggleButton1.setFont(new java.awt.Font("Segoe UI", 1, 17)); // NOI18N
         jToggleButton1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/nexatek/images/img/supplier.png"))); // NOI18N
         jToggleButton1.setText("Supplier");
         jToggleButton1.addActionListener(new java.awt.event.ActionListener() {
@@ -468,31 +691,31 @@ public class Home extends javax.swing.JFrame {
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addComponent(counter, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(counter, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jToggleButton3, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jToggleButton3, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jToggleButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jToggleButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jToggleButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jToggleButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jToggleButton4, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jToggleButton4, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jToggleButton5, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jToggleButton5, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jToggleButton6, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jToggleButton6, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jToggleButton7, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jToggleButton7, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jToggleButton8, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jToggleButton8, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jToggleButton10, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jToggleButton10, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jToggleButton11, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(55, 55, 55)
-                .addComponent(poweroff, javax.swing.GroupLayout.PREFERRED_SIZE, 61, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jToggleButton11, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addComponent(poweroff, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jToggleButton9, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jToggleButton9, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
 
@@ -686,4 +909,11 @@ public class Home extends javax.swing.JFrame {
     private javax.swing.JPanel panel_load;
     private javax.swing.JButton poweroff;
     // End of variables declaration//GEN-END:variables
+    
+    // Custom title bar buttons
+    private javax.swing.JButton btnSettings;
+    private javax.swing.JButton btnNotifications;
+    private javax.swing.JButton btnHelp;
+    private javax.swing.JButton btnAbout;
+    private javax.swing.JButton btnBackup;
 }

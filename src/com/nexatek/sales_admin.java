@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
@@ -156,11 +157,11 @@ public class sales_admin extends javax.swing.JPanel {
         inputPanel.setPreferredSize(new Dimension(900, 70));
         inputPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 70));
         
-        productsPanel.setPreferredSize(new Dimension(900, 240));
-        productsPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 260));
+        productsPanel.setPreferredSize(new Dimension(900, 280));
+        productsPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 300));
         
-        cartPanel.setPreferredSize(new Dimension(900, 155));
-        cartPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 170));
+        cartPanel.setPreferredSize(new Dimension(900, 195));
+        cartPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 210));
         
         actionsPanel.setPreferredSize(new Dimension(900, 55));
         actionsPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 55));
@@ -176,13 +177,12 @@ public class sales_admin extends javax.swing.JPanel {
         contentPanel.add(Box.createVerticalStrut(2));
         contentPanel.add(actionsPanel);
         
-        // Scroll pane with ALWAYS visible scrollbar
+        // Scroll pane to allow scrolling when content exceeds screen
         JScrollPane scrollPane = new JScrollPane(contentPanel);
-        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        scrollPane.getVerticalScrollBar().setUnitIncrement(20);
-        scrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(18, 0)); // Wider scrollbar
-        scrollPane.setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        scrollPane.setBorder(null);
         
         add(scrollPane, java.awt.BorderLayout.CENTER);
     }
@@ -461,6 +461,9 @@ public class sales_admin extends javax.swing.JPanel {
         add_to_cart.setFocusPainted(false);
         add_to_cart.setOpaque(true);
         add_to_cart.setBorderPainted(true);
+        try {
+            add_to_cart.setIcon(new ImageIcon(getClass().getResource("/com/nexatek/images/img/save.png")));
+        } catch (Exception e) {}
         add_to_cart.addActionListener(e -> add_to_cartActionPerformed());
         
         remove = new JButton("Remove");
@@ -470,6 +473,9 @@ public class sales_admin extends javax.swing.JPanel {
         remove.setFocusPainted(false);
         remove.setOpaque(true);
         remove.setBorderPainted(true);
+        try {
+            remove.setIcon(new ImageIcon(getClass().getResource("/com/nexatek/images/img/remove.png")));
+        } catch (Exception e) {}
         remove.addActionListener(e -> removeActionPerformed());
         
         removeall = new JButton("Clear All");
@@ -479,6 +485,9 @@ public class sales_admin extends javax.swing.JPanel {
         removeall.setFocusPainted(false);
         removeall.setOpaque(true);
         removeall.setBorderPainted(true);
+        try {
+            removeall.setIcon(new ImageIcon(getClass().getResource("/com/nexatek/images/img/delete.png")));
+        } catch (Exception e) {}
         removeall.addActionListener(e -> removeallActionPerformed());
         
         jButton1 = new JButton("Stats");
@@ -488,6 +497,9 @@ public class sales_admin extends javax.swing.JPanel {
         jButton1.setFocusPainted(false);
         jButton1.setOpaque(true);
         jButton1.setBorderPainted(true);
+        try {
+            jButton1.setIcon(new ImageIcon(getClass().getResource("/com/nexatek/images/img/reports.png")));
+        } catch (Exception e) {}
         jButton1.addActionListener(e -> jButton1ActionPerformed());
         
         cashpaid = new JLabel("Paid Amt", SwingConstants.CENTER);
@@ -512,9 +524,7 @@ public class sales_admin extends javax.swing.JPanel {
         finish.setBorder(BorderFactory.createRaisedBevelBorder());
         try {
             finish.setIcon(new ImageIcon(getClass().getResource("/com/nexatek/images/img/icons8-samsung-pay-56.png")));
-        } catch (Exception e) {
-            // Icon not found, continue without it
-        }
+        } catch (Exception e) {}
         finish.addActionListener(e -> finishActionPerformed());
         
         actionsPanel.add(add_to_cart);

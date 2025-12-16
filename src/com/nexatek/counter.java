@@ -49,6 +49,13 @@ ResultSet rst;
         conn=connection.connect();
         initComponents();
         
+        // Set application icon for title bar and taskbar
+        try {
+            setIconImage(new javax.swing.ImageIcon(getClass().getResource("/com/nexatek/images/necxtek logo.png")).getImage());
+        } catch (Exception e) {
+            System.out.println("Could not load icon: " + e.getMessage());
+        }
+        
         items.getTableHeader().setFont( new Font("segoe UI", Font.BOLD,18));
         items.getTableHeader().setOpaque(true);
         items.getTableHeader().setBackground(new Color(242,242,242));
