@@ -8,6 +8,7 @@ import java.awt.event.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import javax.swing.*;
 import javax.swing.border.*;
 
@@ -313,45 +314,75 @@ public class LOGIN extends javax.swing.JFrame {
             return;
         }
         
+        if (conn == null) {
+            statusLabel.setText("Database connection failed. Please check the database settings.");
+            return;
+        }
+        
         statusLabel.setText(" ");
         
-        String sql = "select * from employeestbl where username = ? and password = ?";
-        String sql2 = "select * from administrators where username = ? and password = ?";
+        String[][] loginQueries = {
+            {"SELECT username, password FROM employeestbl WHERE LOWER(username) = LOWER(?) AND password = ?", "employee"},
+            {"SELECT username, password FROM users WHERE LOWER(username) = LOWER(?) AND password = ?", "employee"},
+            {"SELECT username, password FROM users WHERE LOWER(user_name) = LOWER(?) AND password = ?", "employee"},
+            {"SELECT username, password FROM users WHERE LOWER(username) = LOWER(?) AND user_password = ?", "employee"},
+            {"SELECT username, password FROM users WHERE LOWER(user_name) = LOWER(?) AND user_password = ?", "employee"},
+            {"SELECT username, password FROM users WHERE LOWER(username) = LOWER(?) AND pass = ?", "employee"},
+            {"SELECT username, password FROM administrators WHERE LOWER(username) = LOWER(?) AND password = ?", "admin"}
+        };
         
         try {
-            // Check employee login
-            pst = conn.prepareStatement(sql);
-            pst.setString(1, user);
-            pst.setString(2, pass);
-            rst = pst.executeQuery();
-            
-            if (rst.next()) {
-                this.setVisible(false);
-                JOptionPane.showMessageDialog(null, "Welcome " + user + "!");
-                counter count = new counter();
-                count.pack();
-                count.counter.setText(user);
-                count.setVisible(true);
-                return;
-            }
-            
-            // Check admin login
-            pst = conn.prepareStatement(sql2);
-            pst.setString(1, user);
-            pst.setString(2, pass);
-            rst = pst.executeQuery();
-            
-            if (rst.next()) {
-                rst.close();
-                pst.close();
-                this.setVisible(false);
-                Home e = new Home();
-                e.pack();
-                e.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
-                e.counter.setText(user);
-                e.setVisible(true);
-                JOptionPane.showMessageDialog(null, "Welcome " + user + "!");
-                return;
+            for (String[] entry : loginQueries) {
+                String sql = entry[0];
+                String role = entry[1];
+                
+                try {
+                    pst = conn.prepareStatement(sql);
+                    pst.setString(1, user);
+                    pst.setString(2, pass);
+                    rst = pst.executeQuery();
+                    
+                    if (rst.next()) {
+                        String loggedUser = rst.getString("username");
+                        if (loggedUser == null || loggedUser.isEmpty()) {
+                            loggedUser = rst.getString("user_name");
+                        }
+                        
+                        rst.close();
+                        pst.close();
+                        rst = null;
+                        pst = null;
+                        
+                        JOptionPane.showMessageDialog(this, "Welcome " + loggedUser + "!");
+                        dispose();
+                        
+                        if ("admin".equals(role)) {
+                            Home e = new Home();
+                            e.pack();
+                            e.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
+                            e.counter.setText(loggedUser);
+                            e.setLocationRelativeTo(null);
+                            e.setVisible(true);
+                        } else {
+                            counter count = new counter();
+                            count.pack();
+                            count.counter.setText(loggedUser);
+                            count.setLocationRelativeTo(null);
+                            count.setVisible(true);
+                        }
+                        return;
+                    }
+                } catch (SQLException ex) {
+                    // Try the next possible schema variation
+                    if (rst != null) {
+                        try { rst.close(); } catch (Exception ignored) {}
+                        rst = null;
+                    }
+                    if (pst != null) {
+                        try { pst.close(); } catch (Exception ignored) {}
+                        pst = null;
+                    }
+                }
             }
             
             // Invalid credentials
@@ -362,8 +393,12 @@ public class LOGIN extends javax.swing.JFrame {
             statusLabel.setText("Login error: " + e.getMessage());
         } finally {
             try {
-                if (rst != null) rst.close();
-                if (pst != null) pst.close();
+                if (rst != null && !rst.isClosed()) {
+                    rst.close();
+                }
+                if (pst != null && !pst.isClosed()) {
+                    pst.close();
+                }
             } catch (Exception e) {}
         }
     }

@@ -18,6 +18,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 import javax.swing.table.DefaultTableModel;
 import net.proteanit.sql.DbUtils;
 import net.sf.jasperreports.engine.JRException;
@@ -61,7 +63,7 @@ ResultSet rst;
         items.getTableHeader().setBackground(new Color(242,242,242));
         items.getTableHeader().setForeground(new Color(0,0,255)); 
                 
-         DefaultTableModel model = new DefaultTableModel();
+        DefaultTableModel model = new DefaultTableModel();
         items.setModel(model);
         model.addColumn("IID");
         model.addColumn("BARCODE");
@@ -71,10 +73,8 @@ ResultSet rst;
         model.addColumn("SUB-TOTAL");
         
         currentdate();
-        sendOutOfStockData();
-        InvoiceNumbers();   
         Update_table();
-        calculateTotalSalesPerDay();
+        refreshDashboard();
     }
 
     private void  Update_table(){
@@ -140,33 +140,32 @@ private void updateCombo(){
     }
 
  public void currentdate() {
+        Timer clock = new Timer(1000, e -> {
+            Calendar cal = new GregorianCalendar();
+            int month = cal.get(Calendar.MONTH);
+            int year = cal.get(Calendar.YEAR);
+            int day = cal.get(Calendar.DAY_OF_MONTH);
+            date.setText(" " + year + "/" + (month + 1) + "/" + day);
 
-        Thread clock = new Thread() {
-            
-            public void run() {
-                for (;;) {
-                    Calendar cal = new GregorianCalendar();
-                    int month = cal.get(Calendar.MONTH);
-                    int year = cal.get(Calendar.YEAR);
-                    int day = cal.get(Calendar.DAY_OF_MONTH);
-                    date.setText(" "+year + "/" + (month + 1) + "/" + day);
-
-                    //time
-                    int second = cal.get(Calendar.SECOND);
-                    int minute = cal.get(Calendar.MINUTE);
-                    int hour = cal.get(Calendar.HOUR);
-                    time.setText(" "+"0" + hour + ":" + (minute) + ":" + second);
-                    //TIME.setEditable(false);
-                    //DATE.setEditable(false);
-                    try {
-                        sleep(1000);
-                    } catch (InterruptedException ex) {
-                        java.util.logging.Logger.getLogger(LOGIN.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-                    } 
-                }
-            }
-        };
+            int second = cal.get(Calendar.SECOND);
+            int minute = cal.get(Calendar.MINUTE);
+            int hour = cal.get(Calendar.HOUR);
+            time.setText(" " + String.format("%02d:%02d:%02d", hour, minute, second));
+        });
+        clock.setInitialDelay(0);
         clock.start();
+    }
+
+    private void refreshDashboard() {
+        new Thread(() -> {
+            try {
+                sendOutOfStockData();
+                InvoiceNumbers();
+                calculateTotalSalesPerDay();
+            } catch (Exception ex) {
+                Logger.getLogger(counter.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }).start();
     }
  
 // calculating the Grand total
@@ -285,27 +284,26 @@ private void updateCombo(){
                     pstDelete = conn.prepareStatement(deleteQuery);
                     pstDelete.setFloat(1, qty);
                     pstDelete.execute();
-JOptionPane.showMessageDialog(null, name);
+
                     // Use a different PreparedStatement for the INSERT query
                     pstInsert = conn.prepareStatement(insertQuery);
                     pstInsert.setString(1,barcode);
-            pstInsert.setString(2,name);
-            pstInsert.setString(3,size);
-            pstInsert.setFloat(4, prc);
-            pstInsert.setFloat(5, prc2);
-            pstInsert.setFloat(6, prc3);
-            pstInsert.setInt(7, Integer.parseInt(quantity));
-            pstInsert.setString(8, category);
-            pstInsert.setInt(9,Integer.valueOf(supplier_id));
-            pstInsert.setFloat(10, costp);
+                    pstInsert.setString(2,name);
+                    pstInsert.setString(3,size);
+                    pstInsert.setFloat(4, prc);
+                    pstInsert.setFloat(5, prc2);
+                    pstInsert.setFloat(6, prc3);
+                    pstInsert.setInt(7, Integer.parseInt(quantity));
+                    pstInsert.setString(8, category);
+                    pstInsert.setInt(9,Integer.valueOf(supplier_id));
+                    pstInsert.setFloat(10, costp);
                     pstInsert.execute();
-                    
-                    JOptionPane.showMessageDialog(null, "You have sold your last items and product is now out of stock /n KEVINcustoms is advising you to refill the stock");
                 } catch (SQLException e) {
+                    Logger.getLogger(counter.class.getName()).log(Level.WARNING, "Error syncing stock status", e);
                 }
             }
         }
-        Update_table();
+        SwingUtilities.invokeLater(this::Update_table);
     } catch (SQLException ex) {
         Logger.getLogger(product.class.getName()).log(Level.SEVERE, null, ex);
     } finally {

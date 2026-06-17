@@ -86,7 +86,7 @@ public class Home extends javax.swing.JFrame {
         }
         
         // Title
-        jLabel1.setText("LUCKY ELECTRICALS");
+        jLabel1.setText("KEBZ PHONE SERVICE CENTRE");
         jLabel1.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 20));
         jLabel1.setForeground(java.awt.Color.WHITE);
         
@@ -508,6 +508,7 @@ public class Home extends javax.swing.JFrame {
         counter = new javax.swing.JLabel();
         jToggleButton11 = new javax.swing.JToggleButton();
         jToggleButton1 = new javax.swing.JToggleButton();
+        jToggleButton12 = new javax.swing.JToggleButton();
         panel_load = new javax.swing.JPanel();
         jPanel3 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
@@ -517,9 +518,8 @@ public class Home extends javax.swing.JFrame {
         jPanel1.setBorder(javax.swing.BorderFactory.createEtchedBorder());
 
         jToggleButton2.setBackground(new java.awt.Color(255, 204, 102));
-        jToggleButton2.setForeground(new java.awt.Color(30, 30, 30)); // Dark text on yellow
         home_bnt_grp.add(jToggleButton2);
-        jToggleButton2.setFont(new java.awt.Font("Segoe UI", 1, 17)); // NOI18N
+        jToggleButton2.setFont(new java.awt.Font("Cantarell", 1, 17)); // NOI18N
         jToggleButton2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/nexatek/images/img/emp.png"))); // NOI18N
         jToggleButton2.setText("Employee");
         jToggleButton2.addActionListener(new java.awt.event.ActionListener() {
@@ -529,9 +529,8 @@ public class Home extends javax.swing.JFrame {
         });
 
         jToggleButton3.setBackground(new java.awt.Color(0, 153, 255));
-        jToggleButton3.setForeground(java.awt.Color.WHITE); // White text on blue
         home_bnt_grp.add(jToggleButton3);
-        jToggleButton3.setFont(new java.awt.Font("Segoe UI", 1, 17)); // NOI18N
+        jToggleButton3.setFont(new java.awt.Font("Cantarell", 1, 17)); // NOI18N
         jToggleButton3.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/nexatek/images/img/customer.png"))); // NOI18N
         jToggleButton3.setText("Technicians");
         jToggleButton3.addActionListener(new java.awt.event.ActionListener() {
@@ -541,9 +540,8 @@ public class Home extends javax.swing.JFrame {
         });
 
         jToggleButton4.setBackground(new java.awt.Color(204, 0, 0));
-        jToggleButton4.setForeground(java.awt.Color.WHITE); // White text on red
         home_bnt_grp.add(jToggleButton4);
-        jToggleButton4.setFont(new java.awt.Font("Segoe UI", 1, 17)); // NOI18N
+        jToggleButton4.setFont(new java.awt.Font("Cantarell", 1, 17)); // NOI18N
         jToggleButton4.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/nexatek/images/img/product.png"))); // NOI18N
         jToggleButton4.setText("Product");
         jToggleButton4.addActionListener(new java.awt.event.ActionListener() {
@@ -553,9 +551,8 @@ public class Home extends javax.swing.JFrame {
         });
 
         jToggleButton5.setBackground(new java.awt.Color(0, 153, 51));
-        jToggleButton5.setForeground(java.awt.Color.WHITE); // White text on green
         home_bnt_grp.add(jToggleButton5);
-        jToggleButton5.setFont(new java.awt.Font("Segoe UI", 1, 17)); // NOI18N
+        jToggleButton5.setFont(new java.awt.Font("Cantarell", 1, 17)); // NOI18N
         jToggleButton5.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/nexatek/images/img/sales_menu.png"))); // NOI18N
         jToggleButton5.setText("Sales");
         jToggleButton5.addActionListener(new java.awt.event.ActionListener() {
@@ -565,9 +562,8 @@ public class Home extends javax.swing.JFrame {
         });
 
         jToggleButton6.setBackground(new java.awt.Color(255, 204, 102));
-        jToggleButton6.setForeground(new java.awt.Color(30, 30, 30)); // Dark text on yellow
         home_bnt_grp.add(jToggleButton6);
-        jToggleButton6.setFont(new java.awt.Font("Segoe UI", 1, 17)); // NOI18N
+        jToggleButton6.setFont(new java.awt.Font("Cantarell", 1, 17)); // NOI18N
         jToggleButton6.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/nexatek/images/img/invo.png"))); // NOI18N
         jToggleButton6.setText("Invoice");
         jToggleButton6.addActionListener(new java.awt.event.ActionListener() {
@@ -577,9 +573,8 @@ public class Home extends javax.swing.JFrame {
         });
 
         jToggleButton7.setBackground(new java.awt.Color(0, 153, 255));
-        jToggleButton7.setForeground(java.awt.Color.WHITE); // White text on blue
         home_bnt_grp.add(jToggleButton7);
-        jToggleButton7.setFont(new java.awt.Font("Segoe UI", 1, 17)); // NOI18N
+        jToggleButton7.setFont(new java.awt.Font("Cantarell", 1, 17)); // NOI18N
         jToggleButton7.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/nexatek/images/img/reports.png"))); // NOI18N
         jToggleButton7.setText("Reports");
         jToggleButton7.addActionListener(new java.awt.event.ActionListener() {
@@ -589,9 +584,8 @@ public class Home extends javax.swing.JFrame {
         });
 
         jToggleButton8.setBackground(new java.awt.Color(255, 204, 102));
-        jToggleButton8.setForeground(new java.awt.Color(30, 30, 30)); // Dark text on yellow
         home_bnt_grp.add(jToggleButton8);
-        jToggleButton8.setFont(new java.awt.Font("Segoe UI", 1, 17)); // NOI18N
+        jToggleButton8.setFont(new java.awt.Font("Cantarell", 1, 17)); // NOI18N
         jToggleButton8.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/nexatek/images/img/customer.png"))); // NOI18N
         jToggleButton8.setText("Customers");
         jToggleButton8.addActionListener(new java.awt.event.ActionListener() {
@@ -600,9 +594,7 @@ public class Home extends javax.swing.JFrame {
             }
         });
 
-        jToggleButton9.setBackground(new java.awt.Color(52, 73, 94)); // Dark blue-gray
-        jToggleButton9.setForeground(java.awt.Color.WHITE); // White text
-        jToggleButton9.setFont(new java.awt.Font("Segoe UI", 1, 17)); // NOI18N
+        jToggleButton9.setFont(new java.awt.Font("Cantarell", 1, 17)); // NOI18N
         jToggleButton9.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/nexatek/images/img/icons8-exit-50.png"))); // NOI18N
         jToggleButton9.setText("LOGOUT");
         jToggleButton9.addActionListener(new java.awt.event.ActionListener() {
@@ -612,9 +604,8 @@ public class Home extends javax.swing.JFrame {
         });
 
         jToggleButton10.setBackground(new java.awt.Color(204, 0, 0));
-        jToggleButton10.setForeground(java.awt.Color.WHITE); // White text on red
         home_bnt_grp.add(jToggleButton10);
-        jToggleButton10.setFont(new java.awt.Font("Segoe UI", 1, 17)); // NOI18N
+        jToggleButton10.setFont(new java.awt.Font("Cantarell", 1, 17)); // NOI18N
         jToggleButton10.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/nexatek/images/img/product.png"))); // NOI18N
         jToggleButton10.setText("OUT OF STOCK");
         jToggleButton10.addActionListener(new java.awt.event.ActionListener() {
@@ -623,8 +614,6 @@ public class Home extends javax.swing.JFrame {
             }
         });
 
-        poweroff.setBackground(new java.awt.Color(192, 57, 43)); // Dark red
-        poweroff.setForeground(java.awt.Color.WHITE); // White text
         poweroff.setFont(new java.awt.Font("Segoe UI", 1, 17)); // NOI18N
         poweroff.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/nexatek/images/img/icons8-power-off-48.png"))); // NOI18N
         poweroff.setText("Power Off");
@@ -637,9 +626,8 @@ public class Home extends javax.swing.JFrame {
         counter.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
 
         jToggleButton11.setBackground(new java.awt.Color(0, 153, 51));
-        jToggleButton11.setForeground(java.awt.Color.WHITE); // White text on green
         home_bnt_grp.add(jToggleButton11);
-        jToggleButton11.setFont(new java.awt.Font("Segoe UI", 1, 17)); // NOI18N
+        jToggleButton11.setFont(new java.awt.Font("Cantarell", 1, 17)); // NOI18N
         jToggleButton11.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/nexatek/images/img/supplier.png"))); // NOI18N
         jToggleButton11.setText("Expenditures");
         jToggleButton11.addActionListener(new java.awt.event.ActionListener() {
@@ -649,14 +637,24 @@ public class Home extends javax.swing.JFrame {
         });
 
         jToggleButton1.setBackground(new java.awt.Color(0, 153, 51));
-        jToggleButton1.setForeground(java.awt.Color.WHITE); // White text on green
         home_bnt_grp.add(jToggleButton1);
-        jToggleButton1.setFont(new java.awt.Font("Segoe UI", 1, 17)); // NOI18N
+        jToggleButton1.setFont(new java.awt.Font("Cantarell", 1, 17)); // NOI18N
         jToggleButton1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/nexatek/images/img/supplier.png"))); // NOI18N
         jToggleButton1.setText("Supplier");
         jToggleButton1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jToggleButton1ActionPerformed(evt);
+            }
+        });
+
+        jToggleButton12.setBackground(new java.awt.Color(153, 76, 0));
+        home_bnt_grp.add(jToggleButton12);
+        jToggleButton12.setFont(new java.awt.Font("Cantarell", 1, 17)); // NOI18N
+        jToggleButton12.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/nexatek/images/img/supplier.png"))); // NOI18N
+        jToggleButton12.setText("Phone Repair");
+        jToggleButton12.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jToggleButton12ActionPerformed(evt);
             }
         });
 
@@ -685,37 +683,40 @@ public class Home extends javax.swing.JFrame {
                             .addComponent(jToggleButton6, javax.swing.GroupLayout.PREFERRED_SIZE, 186, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addGap(0, 0, Short.MAX_VALUE))
                     .addComponent(jToggleButton11, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jToggleButton1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(jToggleButton1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jToggleButton12, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addComponent(counter, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(counter, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jToggleButton3, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jToggleButton3, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jToggleButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jToggleButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jToggleButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jToggleButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jToggleButton4, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jToggleButton4, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jToggleButton5, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jToggleButton5, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jToggleButton6, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jToggleButton6, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jToggleButton7, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jToggleButton7, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jToggleButton8, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jToggleButton8, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jToggleButton10, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jToggleButton10, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jToggleButton11, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
-                .addComponent(poweroff, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jToggleButton11, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jToggleButton9, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jToggleButton12, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(55, 55, 55)
+                .addComponent(poweroff, javax.swing.GroupLayout.PREFERRED_SIZE, 61, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jToggleButton9, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
 
@@ -725,7 +726,7 @@ public class Home extends javax.swing.JFrame {
         panel_load.setLayout(panel_loadLayout);
         panel_loadLayout.setHorizontalGroup(
             panel_loadLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 692, Short.MAX_VALUE)
+            .addGap(0, 0, Short.MAX_VALUE)
         );
         panel_loadLayout.setVerticalGroup(
             panel_loadLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -737,13 +738,13 @@ public class Home extends javax.swing.JFrame {
         jPanel3.setForeground(new java.awt.Color(255, 255, 255));
 
         jLabel1.setFont(new java.awt.Font("Cantarell", 1, 48)); // NOI18N
-        jLabel1.setText("LUCKY ELECTRICALS");
+        jLabel1.setText("KEBZ PHONE SERVICE CENTRE");
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, 894, Short.MAX_VALUE)
+            .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -853,6 +854,11 @@ public class Home extends javax.swing.JFrame {
         jpload.jPanelLoader(panel_load, expend);
     }//GEN-LAST:event_jToggleButton11ActionPerformed
 
+    private void jToggleButton12ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jToggleButton12ActionPerformed
+        PhoneRepair phoneRepair = new PhoneRepair();
+        jpload.jPanelLoader(panel_load, phoneRepair);
+    }//GEN-LAST:event_jToggleButton12ActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -898,6 +904,7 @@ public class Home extends javax.swing.JFrame {
     private javax.swing.JToggleButton jToggleButton1;
     private javax.swing.JToggleButton jToggleButton10;
     private javax.swing.JToggleButton jToggleButton11;
+    private javax.swing.JToggleButton jToggleButton12;
     private javax.swing.JToggleButton jToggleButton2;
     private javax.swing.JToggleButton jToggleButton3;
     private javax.swing.JToggleButton jToggleButton4;
