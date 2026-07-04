@@ -14,7 +14,6 @@ import javax.swing.JOptionPane;
 import javax.swing.RowFilter;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
-import net.proteanit.sql.DbUtils;
 
 /**
  *
@@ -31,24 +30,7 @@ public class invoices extends javax.swing.JPanel {
     }
 
     private void  Update_table(){
-        try{
-            String invoice=invoice_no.getText();
-//    String sql = "select * from solditems where invoice_number='"+invoice+"'";
-    String sql = "select * from solditems";
-    pst = conn.prepareStatement(sql);
-    rst = pst.executeQuery();
-    invoice_details.setModel(DbUtils.resultSetToTableModel(rst));
-    }
-    catch(Exception e){
-        JOptionPane.showMessageDialog(null, e);
-    }
-    finally{
-        try{
-          
-        }catch(Exception ex){
-            JOptionPane.showMessageDialog(null, ex);
-        }
-    }
+        UiDataLoader.loadTable(this, conn, invoice_details, "select * from solditems");
    }
     
     private void searchInvoicesByDate() {
@@ -59,17 +41,11 @@ public class invoices extends javax.swing.JPanel {
 
         // Construct the SQL query for searching by date range
         String sql = "SELECT * FROM solditems WHERE selldate BETWEEN ? AND ?";
-        pst = conn.prepareStatement(sql);
-
-        // Set the start and end dates to the prepared statement
-        pst.setDate(1, new java.sql.Date(startDate.getTime()));
-        pst.setDate(2, new java.sql.Date(endDate.getTime()));
-
-        rst = pst.executeQuery();
-
-        // Set the result to your table model (replace with your actual table model)
-        invoice_details.setModel(DbUtils.resultSetToTableModel(rst));
-    } catch (SQLException e) {
+        UiDataLoader.loadTable(this, conn, invoice_details, sql, statement -> {
+            statement.setDate(1, new java.sql.Date(startDate.getTime()));
+            statement.setDate(2, new java.sql.Date(endDate.getTime()));
+        });
+    } catch (Exception e) {
         JOptionPane.showMessageDialog(null, e);
     }
 }
@@ -267,14 +243,10 @@ public class invoices extends javax.swing.JPanel {
 
             // Construct the SQL query for searching
             String sql = "SELECT * FROM solditems WHERE invoice_number = ?";
-            pst = conn.prepareStatement(sql);
-            pst.setInt(1, searchCriteria);
-            rst = pst.executeQuery();       
-
-            invoice_details.setModel(DbUtils.resultSetToTableModel(rst));
+            UiDataLoader.loadTable(this, conn, invoice_details, sql, statement -> statement.setInt(1, searchCriteria));
         } catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(null, "Invalid invoice number. Please enter an integer.");
-        } catch (SQLException e) {
+        } catch (Exception e) {
             JOptionPane.showMessageDialog(null, e);
         }
     }
@@ -286,15 +258,11 @@ public class invoices extends javax.swing.JPanel {
     try {
     // Construct the SQL query for searching
     String sql = "SELECT * FROM solditems WHERE customer_name LIKE ?";
-    pst = conn.prepareStatement(sql);
-    // Set the parameters for the prepared statement
-    pst.setString(1, "%" + searchCriteria + "%"); // Using "%" for partial matches
-    rst = pst.executeQuery();       
-
-       invoice_details.setModel(DbUtils.resultSetToTableModel(rst));
+    UiDataLoader.loadTable(this, conn, invoice_details, sql,
+            statement -> statement.setString(1, "%" + searchCriteria + "%"));
     
     
-} catch (SQLException e) {
+} catch (Exception e) {
     JOptionPane.showMessageDialog(null, e);
 } 
     }//GEN-LAST:event_customer_nameKeyTyped
@@ -312,7 +280,13 @@ public class invoices extends javax.swing.JPanel {
     invoice_details.setRowSorter(sorter);
 
     if (!"All".equals(selectedStatus)) {
-        RowFilter<Object, Object> rowFilter = RowFilter.regexFilter(selectedStatus, invoice_details.getColumnModel().getColumnIndex("status"));
+        int statusColumn;
+        try {
+            statusColumn = invoice_details.getColumnModel().getColumnIndex("status");
+        } catch (IllegalArgumentException ex) {
+            return;
+        }
+        RowFilter<Object, Object> rowFilter = RowFilter.regexFilter(selectedStatus, statusColumn);
         sorter.setRowFilter(rowFilter);
     } else {
         sorter.setRowFilter(null); // Show all rows

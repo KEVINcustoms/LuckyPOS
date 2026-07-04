@@ -4,18 +4,13 @@
  */
 package com.nexatek;
 
-import static java.lang.Thread.sleep;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
-import net.proteanit.sql.DbUtils;
 
 public class technicians extends javax.swing.JPanel {
 
@@ -27,73 +22,12 @@ public class technicians extends javax.swing.JPanel {
         initComponents();
         products();
         Update_table();
-        currentdate();
-        
            }
 private void  Update_table(){
-        try{
-    String sql = "select * from technicians";
-    pst = conn.prepareStatement(sql);
-    rst = pst.executeQuery();
-    technician_table.setModel(DbUtils.resultSetToTableModel(rst));
-    }
-    catch(Exception e){
-        JOptionPane.showMessageDialog(null, e);
-    }
-    finally{
-        try{
-          
-        }catch(Exception ex){
-            JOptionPane.showMessageDialog(null, ex);
-        }
-    }
-   }
-public void currentdate() {
-
-        Thread clock = new Thread() {
-            
-            public void run() {
-                for (;;) {
-                    Calendar cal = new GregorianCalendar();
-                    int month = cal.get(Calendar.MONTH);
-                    int year = cal.get(Calendar.YEAR);
-                    int day = cal.get(Calendar.DAY_OF_MONTH);
-//                    date.setText(" "+year + "/" + (month + 1) + "/" + day);
-
-                    //time
-                    int second = cal.get(Calendar.SECOND);
-                    int minute = cal.get(Calendar.MINUTE);
-                    int hour = cal.get(Calendar.HOUR);
-//                    time.setText(" "+"0" + hour + ":" + (minute) + ":" + second);
-                    //TIME.setEditable(false);
-                    //DATE.setEditable(false);
-                    try {
-                        sleep(1000);
-                    } catch (InterruptedException ex) {
-                        java.util.logging.Logger.getLogger(LOGIN.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-                    } 
-                }
-            }
-        };
-        clock.start();
+    UiDataLoader.loadTable(this, conn, technician_table, "select * from technicians");
     }
 private void  products(){
-        try{
-    String sql = "select * from products";
-    pst = conn.prepareStatement(sql);
-    rst = pst.executeQuery();
-    products_table.setModel(DbUtils.resultSetToTableModel(rst));
-    }
-    catch(Exception e){
-        JOptionPane.showMessageDialog(null, e);
-    }
-    finally{
-        try{
-          
-        }catch(Exception ex){
-            JOptionPane.showMessageDialog(null, ex);
-        }
-    }
+    UiDataLoader.loadTable(this, conn, products_table, "select * from products");
    }
    
     @SuppressWarnings("unchecked")
@@ -575,18 +509,13 @@ private void  products(){
     try {
         // Construct the SQL query for searching
         String sql = "SELECT * FROM technicians WHERE id LIKE ? OR name LIKE ? OR phone_number LIKE ?";
-        pst = conn.prepareStatement(sql);
 
-        // Set the parameters for the prepared statement
-        pst.setString(1, "%" + searchCriteria + "%"); // Using "%" for partial matches
-        pst.setString(2, "%" + searchCriteria + "%");
-        pst.setString(3, "%" + searchCriteria + "%");
-        
-
-        // Execute the query and update the JTable
-        rst = pst.executeQuery();
-        technician_table.setModel(DbUtils.resultSetToTableModel(rst));
-    } catch (SQLException e) {
+        UiDataLoader.loadTable(this, conn, technician_table, sql, statement -> {
+            statement.setString(1, "%" + searchCriteria + "%");
+            statement.setString(2, "%" + searchCriteria + "%");
+            statement.setString(3, "%" + searchCriteria + "%");
+        });
+    } catch (Exception e) {
         JOptionPane.showMessageDialog(null, e);
     }
     }//GEN-LAST:event_filter_KeyTyped

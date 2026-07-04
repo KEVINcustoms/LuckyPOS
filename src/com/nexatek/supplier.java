@@ -4,7 +4,6 @@
  */
 package com.nexatek;
 
-import com.sun.jdi.connect.spi.Connection;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.HeadlessException;
@@ -12,7 +11,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import javax.swing.JOptionPane;
-import net.proteanit.sql.DbUtils;
 
 /**
  *
@@ -36,22 +34,7 @@ PreparedStatement pst;
     }
 
     private void  Update_table(){
-        try{
-    String sql = "select * from suppliers";
-    pst = conn.prepareStatement(sql);
-    rst = pst.executeQuery();
-    suppliers.setModel(DbUtils.resultSetToTableModel(rst));
-    }
-    catch(Exception e){
-        JOptionPane.showMessageDialog(null, e);
-    }
-    finally{
-        try{
-          
-        }catch(Exception ex){
-            JOptionPane.showMessageDialog(null, ex);
-        }
-    }
+        UiDataLoader.loadTable(this, conn, suppliers, "select * from suppliers");
    }
     public void clear(){
         name.setText("");
@@ -288,8 +271,7 @@ PreparedStatement pst;
             pst.setInt(1, Integer.valueOf(empid.getText()));
             pst.setString(2,name.getText());
             pst.setString(3,tpnumber.getText());            
-            pst.executeQuery();
-            suppliers.setModel(DbUtils.resultSetToTableModel(rst));
+            pst.executeUpdate();
         }
         catch(SQLException e){
         }

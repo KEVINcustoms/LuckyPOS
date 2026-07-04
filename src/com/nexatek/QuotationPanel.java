@@ -751,39 +751,7 @@ public class QuotationPanel extends JPanel {
     private static class SimplePdfWriter {
 
         private static void writeQuotation(File file, Quotation quotation) throws Exception {
-            List<String> lines = new ArrayList<>();
-            lines.add("KEBZ PHONE SERVICE CENTRE");
-            lines.add("QUOTATION");
-            lines.add("Quotation No: " + quotation.number);
-            lines.add("Date: " + quotation.date);
-            lines.add("Customer: " + quotation.customer);
-            lines.add("Phone: " + quotation.phone);
-            lines.add("Prepared By: " + quotation.preparedBy);
-            lines.add("Valid Until: " + quotation.validUntil);
-            lines.add("");
-            lines.add("Description                           Qty       Unit Price       Total");
-            lines.add("-----------------------------------------------------------------------");
-            for (QuoteLine line : quotation.lines) {
-                lines.add(String.format(Locale.US, "%-36s %6s %15s %12s",
-                        trim(line.description, 34),
-                        formatPlain(line.quantity),
-                        MONEY.format(line.unitPrice),
-                        MONEY.format(line.total)));
-            }
-            lines.add("-----------------------------------------------------------------------");
-            lines.add("TOTAL: " + MONEY.format(quotation.total));
-            lines.add("");
-            lines.add("Thank you for considering LuckyPOS services.");
-
-            StringBuilder content = new StringBuilder();
-            content.append("BT\n/F1 18 Tf\n50 790 Td\n(").append(escape(lines.get(0))).append(") Tj\n");
-            content.append("/F1 14 Tf\n0 -24 Td\n(").append(escape(lines.get(1))).append(") Tj\n");
-            content.append("/F1 10 Tf\n");
-            for (int i = 2; i < lines.size(); i++) {
-                content.append("0 -16 Td\n(").append(escape(lines.get(i))).append(") Tj\n");
-            }
-            content.append("ET\n");
-            byte[] stream = content.toString().getBytes(StandardCharsets.US_ASCII);
+            byte[] stream = buildQuotationPage(quotation).getBytes(StandardCharsets.US_ASCII);
 
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             List<Integer> offsets = new ArrayList<>();
@@ -793,23 +761,146 @@ public class QuotationPanel extends JPanel {
             offsets.add(out.size());
             write(out, "2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj\n");
             offsets.add(out.size());
-            write(out, "3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >> endobj\n");
+            write(out, "3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R /F2 6 0 R >> >> /Contents 5 0 R >> endobj\n");
             offsets.add(out.size());
             write(out, "4 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj\n");
             offsets.add(out.size());
             write(out, "5 0 obj << /Length " + stream.length + " >> stream\n");
             out.write(stream);
             write(out, "\nendstream endobj\n");
+            offsets.add(out.size());
+            write(out, "6 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >> endobj\n");
             int xref = out.size();
-            write(out, "xref\n0 6\n0000000000 65535 f \n");
+            write(out, "xref\n0 7\n0000000000 65535 f \n");
             for (Integer offset : offsets) {
                 write(out, String.format(Locale.US, "%010d 00000 n \n", offset));
             }
-            write(out, "trailer << /Size 6 /Root 1 0 R >>\nstartxref\n" + xref + "\n%%EOF\n");
+            write(out, "trailer << /Size 7 /Root 1 0 R >>\nstartxref\n" + xref + "\n%%EOF\n");
 
             try (FileOutputStream fos = new FileOutputStream(file)) {
                 out.writeTo(fos);
             }
+        }
+
+        private static String buildQuotationPage(Quotation quotation) {
+            StringBuilder pdf = new StringBuilder();
+            drawHeader(pdf, quotation);
+            drawInfoBlocks(pdf, quotation);
+            drawItemsTable(pdf, quotation);
+            drawSummary(pdf, quotation);
+            drawFooter(pdf);
+            return pdf.toString();
+        }
+
+        private static void drawHeader(StringBuilder pdf, Quotation quotation) {
+            fill(pdf, 38, 760, 519, 48, "0.000 0.502 0.251");
+            whiteText(pdf, "F2", 20, 54, 790, "KEBZ PHONE SERVICE CENTRE");
+            whiteText(pdf, "F1", 9, 55, 775, "Phone service, accessories, repairs and sales");
+            whiteText(pdf, "F2", 18, 430, 790, "QUOTATION");
+            whiteText(pdf, "F1", 9, 430, 775, quotation.number);
+        }
+
+        private static void drawInfoBlocks(StringBuilder pdf, Quotation quotation) {
+            stroke(pdf, 38, 675, 250, 62, "0.820 0.850 0.890");
+            stroke(pdf, 307, 675, 250, 62, "0.820 0.850 0.890");
+
+            text(pdf, "F2", 10, 52, 718, "Prepared For");
+            text(pdf, "F1", 10, 52, 701, emptyAsDash(quotation.customer));
+            text(pdf, "F1", 9, 52, 685, "Phone: " + emptyAsDash(quotation.phone));
+
+            text(pdf, "F2", 10, 321, 718, "Quotation Details");
+            text(pdf, "F1", 9, 321, 702, "Date: " + quotation.date);
+            text(pdf, "F1", 9, 321, 688, "Valid Until: " + quotation.validUntil);
+            text(pdf, "F1", 9, 430, 688, "Prepared By: " + emptyAsDash(quotation.preparedBy));
+        }
+
+        private static void drawItemsTable(StringBuilder pdf, Quotation quotation) {
+            int left = 38;
+            int top = 642;
+            int width = 519;
+            int rowHeight = 22;
+            fill(pdf, left, top, width, rowHeight, "0.945 0.965 0.980");
+            stroke(pdf, left, top, width, rowHeight, "0.760 0.800 0.850");
+
+            text(pdf, "F2", 9, 50, top + 7, "Description");
+            text(pdf, "F2", 9, 320, top + 7, "Qty");
+            text(pdf, "F2", 9, 375, top + 7, "Unit Price");
+            text(pdf, "F2", 9, 485, top + 7, "Total");
+
+            int y = top - rowHeight;
+            int shownRows = 0;
+            for (QuoteLine line : quotation.lines) {
+                if (shownRows >= 20) {
+                    text(pdf, "F1", 9, 50, y + 7, "...additional items continue in the application view");
+                    break;
+                }
+                if (shownRows % 2 == 1) {
+                    fill(pdf, left, y, width, rowHeight, "0.985 0.990 0.995");
+                }
+                stroke(pdf, left, y, width, rowHeight, "0.900 0.920 0.945");
+                text(pdf, "F1", 9, 50, y + 7, trim(line.description, 46));
+                rightText(pdf, "F1", 9, 340, y + 7, formatPlain(line.quantity));
+                rightText(pdf, "F1", 9, 445, y + 7, MONEY.format(line.unitPrice));
+                rightText(pdf, "F1", 9, 542, y + 7, MONEY.format(line.total));
+                y -= rowHeight;
+                shownRows++;
+            }
+        }
+
+        private static void drawSummary(StringBuilder pdf, Quotation quotation) {
+            int boxX = 355;
+            int boxY = 120;
+            int boxW = 202;
+            int boxH = 68;
+            stroke(pdf, boxX, boxY, boxW, boxH, "0.760 0.800 0.850");
+            fill(pdf, boxX, boxY, boxW, 30, "0.000 0.502 0.251");
+            text(pdf, "F2", 11, boxX + 14, boxY + 48, "Grand Total");
+            rightText(pdf, "F2", 16, boxX + boxW - 14, boxY + 10, MONEY.format(quotation.total));
+
+            text(pdf, "F2", 10, 38, 170, "Terms and Notes");
+            text(pdf, "F1", 9, 38, 154, "1. This quotation is valid until the date shown above.");
+            text(pdf, "F1", 9, 38, 140, "2. Stock is not reduced until a sale is completed.");
+            text(pdf, "F1", 9, 38, 126, "3. Prices may change if product availability or selected quantities change.");
+        }
+
+        private static void drawFooter(StringBuilder pdf) {
+            line(pdf, 38, 88, 557, 88, "0.820 0.850 0.890");
+            text(pdf, "F1", 8, 38, 70, "Thank you for considering LuckyPOS services.");
+            rightText(pdf, "F1", 8, 557, 70, "Generated by LuckyPOS");
+        }
+
+        private static void text(StringBuilder pdf, String font, int size, int x, int y, String value) {
+            colorText(pdf, "0 0 0", font, size, x, y, value);
+        }
+
+        private static void whiteText(StringBuilder pdf, String font, int size, int x, int y, String value) {
+            colorText(pdf, "1 1 1", font, size, x, y, value);
+        }
+
+        private static void colorText(StringBuilder pdf, String rgb, String font, int size, int x, int y, String value) {
+            pdf.append(rgb).append(" rg BT /").append(font).append(' ').append(size).append(" Tf ")
+                    .append(x).append(' ').append(y).append(" Td (")
+                    .append(escape(value)).append(") Tj ET\n");
+        }
+
+        private static void rightText(StringBuilder pdf, String font, int size, int rightX, int y, String value) {
+            int approximateWidth = safe(value).length() * size / 2;
+            text(pdf, font, size, rightX - approximateWidth, y, value);
+        }
+
+        private static void fill(StringBuilder pdf, int x, int y, int w, int h, String rgb) {
+            pdf.append(rgb).append(" rg ").append(x).append(' ').append(y).append(' ')
+                    .append(w).append(' ').append(h).append(" re f\n");
+        }
+
+        private static void stroke(StringBuilder pdf, int x, int y, int w, int h, String rgb) {
+            pdf.append(rgb).append(" RG 0.8 w ").append(x).append(' ').append(y).append(' ')
+                    .append(w).append(' ').append(h).append(" re S\n");
+        }
+
+        private static void line(StringBuilder pdf, int x1, int y1, int x2, int y2, String rgb) {
+            pdf.append(rgb).append(" RG 0.8 w ").append(x1).append(' ').append(y1)
+                    .append(" m ").append(x2).append(' ').append(y2).append(" l S\n");
         }
 
         private static void write(ByteArrayOutputStream out, String value) {
@@ -818,7 +909,16 @@ public class QuotationPanel extends JPanel {
         }
 
         private static String escape(String value) {
-            return value.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)").replaceAll("[^\\x20-\\x7E]", "");
+            return safe(value).replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)");
+        }
+
+        private static String emptyAsDash(String value) {
+            String text = safe(value).trim();
+            return text.isEmpty() ? "-" : text;
+        }
+
+        private static String safe(String value) {
+            return value == null ? "" : value.replaceAll("[^\\x20-\\x7E]", "");
         }
     }
 }
