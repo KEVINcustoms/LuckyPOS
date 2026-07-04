@@ -1,9 +1,10 @@
-<!-- Created with Jaspersoft Studio version 7.0.6.final using JasperReports Library version 7.0.6-5d2a603fdc6b3db8f842a83383e594f41891534d  -->
-<jasperReport name="null" language="java" pageWidth="226" pageHeight="576" columnWidth="226" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="de7ef10f-f86f-4b33-a54a-777753d19c75">
-	<property name="ireport.zoom" value="2.0"/>
+<!-- Sales receipt styled to match the phone repair receipt format. -->
+<jasperReport name="SalesReceipt" language="java" pageWidth="226" pageHeight="576" columnWidth="226" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="de7ef10f-f86f-4b33-a54a-777753d19c75">
+	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
 	<property name="ireport.y" value="0"/>
-	<query language="sql"><![CDATA[select * from solditems;]]></query>
+	<parameter name="invoice_number" class="java.lang.String"/>
+	<query language="sql"><![CDATA[SELECT * FROM solditems WHERE invoice_number::varchar = $P{invoice_number}]]></query>
 	<field name="id" class="java.lang.Integer"/>
 	<field name="invoice_number" class="java.lang.Integer"/>
 	<field name="itemid" class="java.lang.String"/>
@@ -20,111 +21,148 @@
 	<field name="paid_amount" class="java.lang.Float"/>
 	<field name="balanc" class="java.lang.Float"/>
 	<background splitType="Stretch"/>
-	<title height="70" splitType="Stretch">
-		<element kind="staticText" uuid="78f2103d-15a5-49cd-9f2b-8066f295a371" x="88" y="41" width="31" height="15">
-			<text><![CDATA[Kiteezi]]></text>
-		</element>
-		<element kind="staticText" uuid="89776806-bc9f-4ea9-bf3a-fac2f4033be6" x="69" y="30" width="68" height="11" fontSize="8.0">
-			<text><![CDATA[+256 741419436]]></text>
-		</element>
-		<element kind="staticText" uuid="a1eebd8d-2d94-4eff-aee4-26d1ec09233e" x="16" y="11" width="174" height="19" fontSize="11.0" bold="true">
+	<title height="86" splitType="Stretch">
+		<element kind="staticText" uuid="0fbbd3aa-30b6-4e44-b52a-55c1389df676" x="10" y="5" width="206" height="18" fontSize="13.0" bold="true" hTextAlign="Center">
 			<text><![CDATA[KEBZ PHONE SERVICE CENTRE]]></text>
 		</element>
+		<element kind="staticText" uuid="ad87201c-d674-4e0c-a817-2d5f3d8b5369" x="10" y="23" width="206" height="18" fontSize="8.0" hTextAlign="Center">
+			<text><![CDATA[Sales, Accessories & Device Services]]></text>
+		</element>
+		<element kind="staticText" uuid="62b6cce1-52ec-450c-aab6-8b8f401e3b35" x="10" y="33" width="206" height="18" fontSize="8.0" hTextAlign="Center">
+			<text><![CDATA[Kiteezi]]></text>
+		</element>
+		<element kind="staticText" uuid="0a4fa0c4-0188-49b2-80c4-95e7a2443a77" x="10" y="42" width="206" height="15" fontSize="8.0" hTextAlign="Center">
+			<text><![CDATA[+256 741419436]]></text>
+		</element>
+		<element kind="line" uuid="466f0fab-6224-41f7-b5ce-1a0577f9fb82" x="5" y="53" width="216" height="1">
+			<pen lineWidth="0.5" lineStyle="Dashed"/>
+		</element>
+		<element kind="staticText" uuid="6bbdd608-3e2e-4d34-a0e4-0f35f2e0e37f" x="65" y="58" width="96" height="14" fontSize="11.0" bold="true" hTextAlign="Center">
+			<text><![CDATA[SALES RECEIPT]]></text>
+		</element>
+		<element kind="line" uuid="f57a73b6-0b1c-4b2d-a048-14f12f9a0466" x="5" y="73" width="216" height="1">
+			<pen lineWidth="0.5" lineStyle="Dashed"/>
+		</element>
 	</title>
-	<pageHeader splitType="Stretch"/>
-	<columnHeader height="27" splitType="Stretch">
-		<element kind="staticText" uuid="efdde48d-2ea7-4721-83be-573ed7ef076d" x="33" y="1" width="64" height="20" bold="true">
-			<text><![CDATA[name]]></text>
-			<box>
-				<topPen lineWidth="1.25" lineStyle="Dashed"/>
-				<bottomPen lineWidth="1.25" lineStyle="Dashed"/>
-			</box>
+	<pageHeader height="44" splitType="Stretch">
+		<element kind="staticText" uuid="f4098acb-f92e-4885-a0f4-30702f09d3a4" x="10" y="3" width="70" height="12" fontSize="8.0" bold="true">
+			<text><![CDATA[Invoice #]]></text>
 		</element>
-		<element kind="staticText" uuid="4af51e00-150c-4497-b4ee-1b84d1e0199d" x="1" y="1" width="23" height="20" bold="true">
-			<text><![CDATA[Id]]></text>
-			<box>
-				<topPen lineWidth="1.25" lineStyle="Dashed"/>
-				<bottomPen lineWidth="1.25" lineStyle="Dashed"/>
-			</box>
+		<element kind="textField" uuid="60c07f40-9203-4617-8e37-af99f1f6c40f" x="85" y="3" width="131" height="12" fontSize="9.0" bold="true" hTextAlign="Right">
+			<expression><![CDATA[String.valueOf($F{invoice_number})]]></expression>
 		</element>
-		<element kind="staticText" uuid="9a2c0938-ae0e-45ef-9fe8-333b4f303689" x="105" y="1" width="38" height="20" bold="true" hTextAlign="Center">
+		<element kind="staticText" uuid="3fa2dd9f-afdd-4073-bef7-19e6a0dd01b7" x="10" y="16" width="70" height="12" fontSize="8.0">
+			<text><![CDATA[Customer:]]></text>
+		</element>
+		<element kind="textField" uuid="e9579d95-1ad9-4b30-8b2f-6b3c278f7e96" x="85" y="16" width="131" height="12" fontSize="8.0" hTextAlign="Right">
+			<expression><![CDATA[$F{customer_name}]]></expression>
+		</element>
+		<element kind="staticText" uuid="53850710-d58c-4ad4-998e-e5dce375fddb" x="10" y="28" width="70" height="12" fontSize="8.0">
+			<text><![CDATA[Phone:]]></text>
+		</element>
+		<element kind="textField" uuid="2594fd4f-407e-43f6-93db-6106f6e6f1b0" x="85" y="28" width="131" height="12" fontSize="8.0" hTextAlign="Right">
+			<expression><![CDATA[$F{customer_phone}]]></expression>
+		</element>
+	</pageHeader>
+	<columnHeader height="24" splitType="Stretch">
+		<element kind="line" uuid="6f38bdb3-6887-4ac6-8541-47008941f6bd" x="5" y="1" width="216" height="1">
+			<pen lineWidth="0.5" lineStyle="Dashed"/>
+		</element>
+		<element kind="staticText" uuid="c1d16542-00a6-42fa-bdbc-47ff179ebf2a" x="10" y="5" width="99" height="14" fontSize="8.0" bold="true">
+			<text><![CDATA[Item]]></text>
+		</element>
+		<element kind="staticText" uuid="ea07a121-c703-4ac6-a89b-c8ed6c79c6c1" x="109" y="5" width="28" height="14" fontSize="8.0" bold="true" hTextAlign="Center">
 			<text><![CDATA[Qty]]></text>
-			<box>
-				<topPen lineWidth="1.25" lineStyle="Dashed"/>
-				<bottomPen lineWidth="1.25" lineStyle="Dashed"/>
-			</box>
 		</element>
-		<element kind="staticText" uuid="d1c508be-66c2-40d0-8d9e-e4bc260ee8f5" x="149" y="1" width="56" height="20" bold="true" hTextAlign="Right">
-			<text><![CDATA[itemprice]]></text>
-			<box>
-				<topPen lineWidth="1.25" lineStyle="Dashed"/>
-				<bottomPen lineWidth="1.25" lineStyle="Dashed"/>
-			</box>
+		<element kind="staticText" uuid="ab69631d-a33f-4f8d-842a-112091fb29f7" x="137" y="5" width="39" height="14" fontSize="8.0" bold="true" hTextAlign="Right">
+			<text><![CDATA[Price]]></text>
+		</element>
+		<element kind="staticText" uuid="9dfc2aae-26d9-4d67-bd74-f54debc244b8" x="176" y="5" width="40" height="14" fontSize="8.0" bold="true" hTextAlign="Right">
+			<text><![CDATA[Total]]></text>
+		</element>
+		<element kind="line" uuid="b8f59a9d-242a-40f3-9356-bcaab8120c2f" x="5" y="21" width="216" height="1">
+			<pen lineWidth="0.5" lineStyle="Dashed"/>
 		</element>
 	</columnHeader>
 	<detail>
-		<band height="23" splitType="Stretch">
-			<element kind="textField" uuid="59c707f4-8079-4325-8924-17a21fc453a1" x="32" y="2" width="65" height="20">
+		<band height="20" splitType="Stretch">
+			<element kind="textField" uuid="5aca9be8-c802-447e-8520-faa214583d1c" x="10" y="1" width="99" height="18" fontSize="8.0">
 				<expression><![CDATA[$F{name}]]></expression>
 			</element>
-			<element kind="textField" uuid="4bc058c4-1421-4f2c-b65a-900959346d17" x="1" y="2" width="23" height="20">
-				<expression><![CDATA[$F{invoice_number}]]></expression>
-			</element>
-			<element kind="textField" uuid="eba9930e-0777-43cb-a3dc-57a18f7528ba" x="105" y="2" width="38" height="20" hTextAlign="Center">
+			<element kind="textField" uuid="c35082cb-1330-41a5-9fef-c9b24c57a47f" x="109" y="1" width="28" height="18" fontSize="8.0" hTextAlign="Center">
 				<expression><![CDATA[$F{quantity}]]></expression>
 			</element>
-			<element kind="textField" uuid="a61f0d56-b70d-44a3-9d67-d83cc7561cc0" x="149" y="3" width="56" height="20" hTextAlign="Right">
-				<expression><![CDATA[$F{itemprice}]]></expression>
+			<element kind="textField" uuid="c0df97c1-93d4-4894-9760-1e7bbdcf94a6" x="137" y="1" width="39" height="18" fontSize="8.0" hTextAlign="Right">
+				<expression><![CDATA[String.format("%.0f", $F{itemprice})]]></expression>
+			</element>
+			<element kind="textField" uuid="d1363996-d05e-473f-a447-af9f03e03515" x="176" y="1" width="40" height="18" fontSize="8.0" hTextAlign="Right">
+				<expression><![CDATA[String.format("%.0f", $F{itemprice} * $F{quantity})]]></expression>
 			</element>
 		</band>
 	</detail>
 	<columnFooter splitType="Stretch"/>
 	<pageFooter splitType="Stretch"/>
-	<summary height="170" splitType="Stretch">
-		<element kind="staticText" uuid="044ea9cb-fe4c-40a2-91d2-a70a8234597d" x="1" y="52" width="104" height="20" bold="true">
-			<text><![CDATA[Customer Name        :]]></text>
+	<summary height="206" splitType="Stretch">
+		<element kind="line" uuid="3580930c-a5f8-4494-9615-c2a7f8af1282" x="5" y="5" width="216" height="1">
+			<pen lineWidth="0.5" lineStyle="Dashed"/>
 		</element>
-		<element kind="textField" uuid="b7d01b37-b5c5-4eb6-b814-3a9c3061e737" x="105" y="52" width="100" height="20" hTextAlign="Right">
-			<expression><![CDATA[$F{customer_name}]]></expression>
+		<element kind="staticText" uuid="05b2fa52-4122-43f4-93ed-6e525285a13b" x="10" y="12" width="70" height="18" fontSize="9.0" bold="true">
+			<text><![CDATA[Total Due:]]></text>
 		</element>
-		<element kind="textField" uuid="905f6d01-aadf-4ab2-b5c5-13ff107e4e67" x="105" y="72" width="100" height="20" hTextAlign="Right">
-			<expression><![CDATA[$F{sold_by}]]></expression>
+		<element kind="textField" uuid="18097cf8-104a-4fe3-aa77-97a7c2a43b5f" x="85" y="12" width="131" height="18" fontSize="9.0" bold="true" hTextAlign="Right">
+			<expression><![CDATA[String.format("%.0f", $F{total}) + " UGX"]]></expression>
 		</element>
-		<element kind="staticText" uuid="fac5cd6c-e666-42e0-b8cf-d76a1d72b9d6" x="1" y="72" width="104" height="20" bold="true">
-			<text><![CDATA[Printed By                 :]]></text>
+		<element kind="staticText" uuid="d10d7f09-f1c7-46df-a94b-f7baa1a5625f" x="10" y="27" width="70" height="16" fontSize="8.0">
+			<text><![CDATA[Paid:]]></text>
 		</element>
-		<element kind="staticText" uuid="b2e8bd6a-474c-4aa9-8859-b0ae8fca30d7" x="52" y="146" width="129" height="20" italic="true">
-			<text><![CDATA[Thank you for supporting us]]></text>
-			<box>
-				<topPen lineWidth="0.75"/>
-				<leftPen lineWidth="0.75"/>
-				<bottomPen lineWidth="0.75"/>
-				<rightPen lineWidth="0.75"/>
-			</box>
+		<element kind="textField" uuid="7f5a576d-6174-4f8b-bc2d-1faafcc688cb" x="85" y="27" width="131" height="16" fontSize="8.0" hTextAlign="Right">
+			<expression><![CDATA[String.format("%.0f", $F{paid_amount}) + " UGX"]]></expression>
 		</element>
-		<element kind="staticText" uuid="0adae4c9-7aa2-4330-b89a-ff736f846d45" x="1" y="92" width="104" height="20" bold="true">
-			<text><![CDATA[Date                          :]]></text>
+		<element kind="staticText" uuid="bd3c7783-38ec-469a-9642-c7a663b740ee" x="10" y="40" width="70" height="16" fontSize="8.0">
+			<text><![CDATA[Balance:]]></text>
 		</element>
-		<element kind="staticText" uuid="2b782046-67f0-4bdd-aee1-ed9e6aa2fb7e" x="1" y="11" width="104" height="20" bold="true">
-			<text><![CDATA[Total sum                 :]]></text>
+		<element kind="textField" uuid="54c6021f-f33e-4e44-8e56-051a5a1261bb" x="85" y="40" width="131" height="16" fontSize="8.0" hTextAlign="Right">
+			<expression><![CDATA[String.format("%.0f", $F{balanc}) + " UGX"]]></expression>
 		</element>
-		<element kind="textField" uuid="04df1f91-a711-4320-a6b7-1e8fae735cd6" x="105" y="92" width="100" height="20" pattern="dd/MM/yyyy" hTextAlign="Right">
-			<expression><![CDATA[new java.util.Date()]]></expression>
+		<element kind="staticText" uuid="198b44b8-b413-4449-84cb-1ae903957bd6" x="10" y="53" width="70" height="16" fontSize="8.0">
+			<text><![CDATA[Pay Status:]]></text>
 		</element>
-		<element kind="textField" uuid="198cca03-10f4-4dde-82de-4669e5c57489" x="105" y="11" width="100" height="20" bold="true" hTextAlign="Right">
-			<expression><![CDATA[$F{total}]]></expression>
-		</element>
-		<element kind="line" uuid="eaa6210a-5e2b-4b66-ab61-285af66e7e87" x="1" y="5" width="216" height="1">
-			<pen lineStyle="Dashed"/>
-		</element>
-		<element kind="textField" uuid="7dcce91e-171d-4400-bcc4-5c1bea178ae1" x="57" y="114" width="119" height="32" fontSize="20.0" bold="false" italic="true" hTextAlign="Center">
+		<element kind="textField" uuid="dc6b8865-19b3-453c-b8e2-1bfcf5969820" x="85" y="53" width="131" height="16" fontSize="8.0" hTextAlign="Right">
 			<expression><![CDATA[$F{status}]]></expression>
 		</element>
-		<element kind="textField" uuid="10ed37d6-f578-4016-be26-57a18d4071ea" x="105" y="32" width="100" height="20" bold="true" hTextAlign="Right">
-			<expression><![CDATA[$F{balanc}]]></expression>
+		<element kind="staticText" uuid="8f82d748-870f-481d-bf5a-f8bb594c4037" x="10" y="66" width="70" height="16" fontSize="8.0">
+			<text><![CDATA[Cashier:]]></text>
 		</element>
-		<element kind="staticText" uuid="65071601-d1f3-4f90-a051-82f371aad88d" x="1" y="32" width="104" height="20" bold="true">
-			<text><![CDATA[STANDING BALANCE]]></text>
+		<element kind="textField" uuid="2aa7a59c-91ac-4758-a5be-6dac72b71e2a" x="85" y="66" width="131" height="16" fontSize="8.0" hTextAlign="Right">
+			<expression><![CDATA[$F{sold_by}]]></expression>
+		</element>
+		<element kind="staticText" uuid="a67655cd-9f9b-45a4-87af-adc69759efa9" x="10" y="79" width="70" height="16" fontSize="8.0">
+			<text><![CDATA[Sale Date:]]></text>
+		</element>
+		<element kind="textField" uuid="d95053f8-2b51-4702-958e-fda4da18ef77" x="85" y="79" width="131" height="16" fontSize="8.0" hTextAlign="Right">
+			<expression><![CDATA[new java.text.SimpleDateFormat("dd/MM/yyyy").format($F{selldate}) + " " + $F{time}]]></expression>
+		</element>
+		<element kind="line" uuid="61a8517f-4b4e-4f14-991d-ce6cde18a9cf" x="5" y="101" width="216" height="1">
+			<pen lineWidth="0.5" lineStyle="Dashed"/>
+		</element>
+		<element kind="staticText" uuid="38452043-4aac-47b4-88d6-62aee0f9ec65" x="10" y="108" width="206" height="28" fontSize="8.0" hTextAlign="Center">
+			<text><![CDATA[IMPORTANT INFORMATION
+- Keep this receipt for warranty and reference
+- Goods sold in good condition are not refundable]]></text>
+		</element>
+		<element kind="line" uuid="e1ad3d92-76bc-43b3-b710-d23a610fac1b" x="5" y="140" width="216" height="1">
+			<pen lineWidth="0.5" lineStyle="Dashed"/>
+		</element>
+		<element kind="staticText" uuid="4f884461-9dc6-46a4-8de0-664f6a2c350e" x="10" y="146" width="206" height="30" fontSize="7.0" italic="true" hTextAlign="Center">
+			<text><![CDATA[Thank you for choosing KEBZ PHONE SERVICE CENTRE!
+
+We are committed to providing excellent service and quality products.]]></text>
+		</element>
+		<element kind="textField" uuid="af11d771-d343-4c6e-81aa-7da1334bcf13" x="10" y="176" width="206" height="14" fontSize="7.0" hTextAlign="Center">
+			<expression><![CDATA["Printed on: " + new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm").format(new java.util.Date())]]></expression>
+		</element>
+		<element kind="staticText" uuid="db11200e-91ad-4be7-a170-003c5a5d4ee6" x="78" y="190" width="70" height="12" fontSize="7.0">
+			<text><![CDATA[Powered by Necxtek]]></text>
 		</element>
 	</summary>
 </jasperReport>

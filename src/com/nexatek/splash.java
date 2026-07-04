@@ -155,7 +155,7 @@ public class splash extends javax.swing.JFrame {
                 Font titleFont = new Font("Segoe UI", Font.BOLD, 36);
                 g2d.setFont(titleFont);
                 
-                String title = "LUCKY ELECTRICALS";
+                String title = "KEBZ PHONE SERVICE CENTRE";
                 FontMetrics fm = g2d.getFontMetrics();
                 int x = (getWidth() - fm.stringWidth(title)) / 2;
                 int y = fm.getAscent() + 5;
@@ -328,7 +328,7 @@ public class splash extends javax.swing.JFrame {
         creditsPanel.add(poweredLabel);
         
         // Copyright
-        JLabel copyrightLabel = new JLabel("\u00A9 2024 Lucky Electricals. All Rights Reserved.");
+        JLabel copyrightLabel = new JLabel("\u00A9 2024 KEBZ PHONE SERVICE CENTRE. All Rights Reserved.");
         copyrightLabel.setFont(new Font("Segoe UI", Font.PLAIN, 9));
         copyrightLabel.setForeground(new Color(90, 110, 130));
         copyrightLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -401,50 +401,7 @@ public class splash extends javax.swing.JFrame {
     }
 
     public static void main(String args[]) {
-        // Set look and feel with professional styling
-        try {
-            for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-            
-            // Professional Button Styling
-            UIManager.put("Button.background", new Color(52, 152, 219));
-            UIManager.put("Button.foreground", new Color(20, 20, 20));
-            UIManager.put("Button.font", new Font("Segoe UI", Font.BOLD, 14));
-            UIManager.put("Button.focus", new Color(41, 128, 185));
-            UIManager.put("Button.textForeground", new Color(20, 20, 20));
-            
-            UIManager.put("ToggleButton.background", new Color(52, 152, 219));
-            UIManager.put("ToggleButton.foreground", new Color(20, 20, 20));
-            UIManager.put("ToggleButton.font", new Font("Segoe UI", Font.BOLD, 14));
-            UIManager.put("ToggleButton.select", new Color(41, 128, 185));
-            UIManager.put("ToggleButton.textForeground", new Color(20, 20, 20));
-            
-            UIManager.put("TextField.background", Color.WHITE);
-            UIManager.put("TextField.foreground", new Color(30, 30, 30));
-            UIManager.put("TextField.font", new Font("Segoe UI", Font.PLAIN, 13));
-            
-            UIManager.put("Label.foreground", new Color(44, 62, 80));
-            UIManager.put("Label.font", new Font("Segoe UI", Font.PLAIN, 13));
-            
-            UIManager.put("Table.foreground", new Color(30, 30, 30));
-            UIManager.put("Table.background", Color.WHITE);
-            UIManager.put("TableHeader.foreground", Color.WHITE);
-            UIManager.put("TableHeader.background", new Color(52, 73, 94));
-            
-            UIManager.put("ComboBox.foreground", new Color(30, 30, 30));
-            UIManager.put("ComboBox.background", Color.WHITE);
-            
-            UIManager.put("Panel.background", new Color(236, 240, 241));
-            
-        } catch (Exception e) {
-            try {
-                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-            } catch (Exception ex) {}
-        }
+        AppTheme.install();
         
         final splash spl = new splash();
         

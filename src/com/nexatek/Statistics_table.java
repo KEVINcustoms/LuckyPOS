@@ -10,6 +10,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.NumberFormat;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -28,12 +32,15 @@ Connection conn;
     PreparedStatement pst;
     ResultSet rst;
     DefaultTableModel model;
+    private StatisticsService statisticsService;
+    private List<StatisticsService.ProfitRow> profitRows = Collections.emptyList();
     /**
      * Creates new form Statistics_table
      */
     public Statistics_table() {
         conn = connection.connect();
         initComponents();
+        statisticsService = new StatisticsService(conn);
         profitsCalculation();
         addProfits();
         
@@ -41,96 +48,22 @@ Connection conn;
     
     
        public void profitsCalculation() {
-        model = new DefaultTableModel();
-        model.addColumn("Product Id");
-        model.addColumn("Product Name");
-        model.addColumn("Initial Quantity");
-        model.addColumn("Unit Cost Price");
-        model.addColumn("Total Cost Prices");
-        model.addColumn("Total Sales");
-        model.addColumn("Stock Quantity");
-        model.addColumn("Profits");
-
-        // For the profits calculations
-        //String sqlprofit1 = "SELECT name,productid FROM products";
-        String sqlprofit1 = 
-                "select products.name as name,"
-                + "products.productid as productid,"
-                + "products.cost_price as unit_cost_price,"
-                + "sub_cost_price.quantity as initQuantity,"
-                + "sub_cost_price.sub_costp as total_cost_prices from products "
-                + "inner join sub_cost_price on products.name = "
-                + "sub_cost_price.product_name";
-        try {
-            pst = conn.prepareStatement(sqlprofit1);
-            rst = pst.executeQuery();
-            while (rst.next()) {
-                String productName = rst.getString("name");
-                int productId = rst.getInt("productid");
-                int initialQuantity = rst.getInt("initQuantity");
-                double total_cost_price = rst.getDouble("total_cost_prices");
-                double unitCostPrice = rst.getDouble("unit_cost_price");
-                
-
-                //Now use the productNames to get all the results matching the productNames
-                String sqlproductDetails = "SELECT cost_price, quantity FROM products WHERE name = ?";
-                
-                //Am now retrieving everything matching the productid of products table from solditems table
-                String sqlproductDetails2 = "SELECT sum(paid_amount) as totalsales from solditems where itemid = ?";
-                
-                /*//Am now retrieving the quantity from the sub_cost_price table
-                String sqlproductDetails3 = "SELECT quantity from sub_cost_price where product_name = ?";*/
-                
-                    
-                PreparedStatement pstProductDetails = conn.prepareStatement(sqlproductDetails);
-                pstProductDetails.setString(1, productName);
-                
-                // This is the prepared statement to deal with String sqlproductDetails2
-                    PreparedStatement pstProductDetails2 = conn.prepareStatement(sqlproductDetails2);
-                    pstProductDetails2.setInt(1, productId);
-                    
-                // These are now the resultsets to handle the data
-                ResultSet rstProductDetails = pstProductDetails.executeQuery();
-                    ResultSet rstProductDetails2 = pstProductDetails2.executeQuery();
-                    //ResultSet rstProductDetails3 = pstProductDetails3.executeQuery();
-                if(rstProductDetails2.next()){
-                double TotalSales = rstProductDetails2.getDouble("totalsales");
-                
-                }
-                /*if(rstProductDetails3.next()){
-                int quantit = rstProductDetails3.getInt("quantity");
-                }*/
-                if (rstProductDetails.next()) {
-                    double cost_prices = rstProductDetails.getDouble("cost_price");
-                    int quantities = rstProductDetails.getInt("quantity");
-                    double profitCalculation = (rstProductDetails2.getDouble
-                    ("totalsales"))- total_cost_price;
-                    System.out.println("profitCalculation : " + profitCalculation);
-                    Vector<Object> row = new Vector<>();
-                    row.add(productId);
-                    row.add(productName);
-                    row.add(initialQuantity);
-                    row.add(unitCostPrice);
-                    row.add(total_cost_price);
-                    row.add(rstProductDetails2.getDouble("totalsales"));
-                    row.add(quantities);
-                    row.add(profitCalculation);
-                    model.addRow(row);
-
-                    // Log the retrieved data
-                    Logger.getLogger(Statistics_table.class.getName()).log(Level.INFO, "Product: {0}, Cost Price: {1}, Quantity: {2}", new Object[]{productName, cost_prices, quantities});
-                }
-                rstProductDetails.close();
-                pstProductDetails.close();
-            }
-            rst.close();
-            pst.close();
-        } catch (SQLException ex) {
-            Logger.getLogger(counter.class.getName()).log(Level.SEVERE, null, ex);
+        if (conn == null) {
+            JOptionPane.showMessageDialog(this, "Database connection failed. Statistics cannot be loaded.");
+            return;
         }
 
-        statisticstbl.setModel(model);
-        statisticstbl.setDefaultRenderer(Object.class, new CustomCellRenderer());
+        try {
+            profitRows = statisticsService.loadProfitRows();
+            model = statisticsService.createTableModel(profitRows);
+            statisticstbl.setModel(model);
+            statisticstbl.setAutoCreateRowSorter(true);
+            statisticstbl.setRowHeight(26);
+            statisticstbl.setDefaultRenderer(Object.class, new CustomCellRenderer());
+        } catch (SQLException ex) {
+            Logger.getLogger(Statistics_table.class.getName()).log(Level.SEVERE, null, ex);
+            JOptionPane.showMessageDialog(this, "Unable to load statistics: " + ex.getMessage());
+        }
 
         // Revalidate and repaint the frame to show the updated UI
         revalidate();
@@ -138,102 +71,56 @@ Connection conn;
     }
 
     static class CustomCellRenderer extends DefaultTableCellRenderer {
+        private static final Color PROFIT_ROW = new Color(220, 255, 220);
+        private static final Color PROFIT_CELL = new Color(62, 190, 96);
+        private static final Color NO_PROFIT_ROW = new Color(255, 225, 225);
+        private static final Color NO_PROFIT_CELL = new Color(225, 78, 78);
+
         public CustomCellRenderer() {
             setOpaque(true);
         }
+
         @Override
         public Component getTableCellRendererComponent(JTable table2, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
             super.getTableCellRendererComponent(table2, value, isSelected, hasFocus, row, column);
-            if (column == 7) {
-                // Price column
-                double profit = (Double) value;
-                if (profit <=0) {
-                    setBackground(Color.RED);
-                } else {
-                    setBackground(Color.GREEN);
-                }
-            } else if (column == 6) {
-                // Quantity Column
-                int quantity = (Integer) value;
-                if (quantity > 50) {
-                    setBackground(Color.WHITE);
-                } else {
-                    setBackground(Color.WHITE);
-                }
-            } else {
-                setBackground(Color.WHITE);
-            }
             if (isSelected) {
                 setBackground(table2.getSelectionBackground());
                 setForeground(table2.getSelectionForeground());
             } else {
-                setForeground(Color.BLACK);
+                int modelRow = table2.convertRowIndexToModel(row);
+                int modelColumn = table2.convertColumnIndexToModel(column);
+                Object profitValue = table2.getModel().getValueAt(modelRow, 7);
+                double profit = profitValue instanceof Number ? ((Number) profitValue).doubleValue() : 0;
+
+                boolean hasProfit = profit > 0;
+                if (modelColumn == 7) {
+                    setBackground(hasProfit ? PROFIT_CELL : NO_PROFIT_CELL);
+                    setForeground(Color.WHITE);
+                } else {
+                    setBackground(hasProfit ? PROFIT_ROW : NO_PROFIT_ROW);
+                    setForeground(Color.BLACK);
+                }
             }
             return this;
         }
     }
     public void addProfits(){
-        double sum = 0;
-        model = (DefaultTableModel) statisticstbl.getModel();
-        for(int row=1;row<model.getRowCount();row++){
-        //starting from 1 to skip the header row
-        Object value = model.getValueAt(row, 7);
-        if(value instanceof Number){
-            double numericValue = ((Number)value).doubleValue();
-            if(numericValue>=0){
-                sum += numericValue;
-                totalprofits.setText(String.valueOf(sum));
-            }
-        }else{
-        try{
-            double numericValue=Double.parseDouble(value.toString());
-            if(numericValue>=0){
-            sum +=numericValue;
-            totalprofits.setText(String.valueOf(sum));
-            }
-        }catch(NumberFormatException e){
-        //Handle or long invalid number format
-        }
-        }
-        }
-        
+        double sum = statisticsService == null ? 0 : statisticsService.totalPositiveProfit(profitRows);
+        totalprofits.setText(NumberFormat.getNumberInstance(Locale.US).format(sum));
     }
     
     public void sendData(){
-    DefaultTableModel model = (DefaultTableModel) statisticstbl.getModel();
-    int rowCount = model.getRowCount();
+    if (profitRows.isEmpty()) {
+        JOptionPane.showMessageDialog(this, "There is no statistics data to save.");
+        return;
+    }
     try {
-        String sql = "insert into profits(productid,productname,initialquantity,unitcost,totalcostprices,totalsales,stockquantity,profits,date) values(?,?,?,?,?,?,?,?)";
-
-        pst = conn.prepareStatement(sql);
-        
-        for (int i = 0; i < rowCount; i++){
-        int productid = Integer.parseInt(model.getValueAt(i, 0).toString());
-        String productname = model.getValueAt(i, 1).toString();
-        int initialquantity = Integer.parseInt(model.getValueAt(i, 2).toString());
-        Float unitcost = Float.valueOf(model.getValueAt(i, 3).toString());
-        float totalcostprices = Float.valueOf(model.getValueAt(i, 4).toString());
-        float totalsales = Float.valueOf(model.getValueAt(i, 5).toString());
-        int stockquantity = Integer.parseInt(model.getValueAt(i, 6).toString());
-        float profits = Float.valueOf(model.getValueAt(i, 7).toString());
-        pst.setInt(1, productid);
-        pst.setString(2, productname);
-        pst.setInt(3, initialquantity);
-        pst.setFloat(4, unitcost);
-        pst.setFloat(5, totalcostprices);
-        pst.setFloat(6, totalsales);
-        pst.setInt(7, stockquantity);
-        pst.setFloat(8, profits);
-        pst.executeUpdate(); 
-    }  
-        JOptionPane.showMessageDialog(null, "Data inserted sucessfully");   
+        statisticsService.saveProfitSnapshot(profitRows);
+        JOptionPane.showMessageDialog(this, "Data inserted successfully");
     } catch (SQLException ex) {
         Logger.getLogger(Statistics_table.class.getName()).log(Level.SEVERE, null, ex);
+        JOptionPane.showMessageDialog(this, "Unable to save statistics: " + ex.getMessage());
     }
-    
-    
-    
-    
     }
     /**
      * This method is called from within the constructor to initialize the form.
@@ -251,7 +138,7 @@ Connection conn;
         totalprofits = new javax.swing.JLabel();
         jButton1 = new javax.swing.JButton();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
         jLabel1.setText("STATISTICS TABLE FOR LUCKY ELECTRICALS");
 
@@ -272,7 +159,7 @@ Connection conn;
 
         totalprofits.setFont(new java.awt.Font("Arial", 1, 20)); // NOI18N
 
-        jButton1.setText("test button");
+        jButton1.setText("Save Snapshot");
         jButton1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton1ActionPerformed(evt);

@@ -5,9 +5,18 @@ package com.nexatek;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.table.DefaultTableModel;
@@ -58,6 +67,7 @@ public class product extends javax.swing.JPanel {
     private JButton jButton2; // Search
     private JButton save_damage;
     private JButton view_damage;
+    private JButton import_invoice;
 
     public product() {
         conn = connection.connect();
@@ -80,30 +90,30 @@ public class product extends javax.swing.JPanel {
         JPanel contentPanel = new JPanel();
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
         contentPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-        
+
         // Align all panels
         headerPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
         inputPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
         actionsPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
         productsPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
         damagedPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        
+
         // Set sizes
         headerPanel.setPreferredSize(new Dimension(900, 50));
         headerPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
-        
+
         inputPanel.setPreferredSize(new Dimension(900, 160));
         inputPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 160));
-        
-        actionsPanel.setPreferredSize(new Dimension(900, 55));
-        actionsPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 55));
-        
+
+        actionsPanel.setPreferredSize(new Dimension(900, 95));
+        actionsPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 95));
+
         productsPanel.setPreferredSize(new Dimension(900, 250));
         productsPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 280));
-        
+
         damagedPanel.setPreferredSize(new Dimension(900, 180));
         damagedPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 200));
-        
+
         // Add panels
         contentPanel.add(headerPanel);
         contentPanel.add(Box.createVerticalStrut(3));
@@ -115,7 +125,6 @@ public class product extends javax.swing.JPanel {
         contentPanel.add(Box.createVerticalStrut(3));
         contentPanel.add(damagedPanel);
         
-        // Scroll pane
         JScrollPane scrollPane = new JScrollPane(contentPanel);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
@@ -334,6 +343,15 @@ public class product extends javax.swing.JPanel {
         view_damage.setPreferredSize(new Dimension(160, 40));
         view_damage.setFocusPainted(false);
         view_damage.addActionListener(e -> view_damageActionPerformed());
+
+        import_invoice = new JButton("Import Invoice");
+        import_invoice.setFont(btnFont);
+        import_invoice.setBackground(new Color(17, 94, 89));
+        import_invoice.setForeground(Color.WHITE);
+        import_invoice.setPreferredSize(new Dimension(170, 40));
+        import_invoice.setFocusPainted(false);
+        import_invoice.setToolTipText("Scan a supplier invoice with Tesseract OCR and review products before saving");
+        import_invoice.addActionListener(e -> importInvoiceActionPerformed());
         
         actionsPanel.add(save);
         actionsPanel.add(jButton2);
@@ -341,6 +359,7 @@ public class product extends javax.swing.JPanel {
         actionsPanel.add(delete);
         actionsPanel.add(save_damage);
         actionsPanel.add(view_damage);
+        actionsPanel.add(import_invoice);
     }
     
     private void createProductsTablePanel() {
@@ -442,7 +461,7 @@ public class product extends javax.swing.JPanel {
         }
         JOptionPane.showMessageDialog(null, total);
     }
-    
+
     // Event handlers
     private void search_barKeyTyped(KeyEvent evt) {
         String searchCriteria = search_bar.getText().trim();
@@ -652,5 +671,418 @@ public class product extends javax.swing.JPanel {
     
     private void view_damageActionPerformed() {
         view_damaged();
+    }
+
+    private void importInvoiceActionPerformed() {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setDialogTitle("Choose supplier invoice image or OCR text");
+        chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(
+                "Invoice images or text", "png", "jpg", "jpeg", "tif", "tiff", "bmp", "txt"));
+
+        if (chooser.showOpenDialog(this) != JFileChooser.APPROVE_OPTION) {
+            return;
+        }
+
+        File invoiceFile = chooser.getSelectedFile();
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+        import_invoice.setEnabled(false);
+
+        SwingWorker<String, Void> worker = new SwingWorker<String, Void>() {
+            @Override
+            protected String doInBackground() throws Exception {
+                if (invoiceFile.getName().toLowerCase().endsWith(".txt")) {
+                    return Files.readString(invoiceFile.toPath());
+                }
+                return runTesseract(invoiceFile);
+            }
+
+            @Override
+            protected void done() {
+                setCursor(Cursor.getDefaultCursor());
+                import_invoice.setEnabled(true);
+                try {
+                    String text = get();
+                    showInvoiceReviewDialog(text, parseInvoiceText(text));
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(product.this,
+                            "Could not read this invoice.\n\nLuckyPOS looked for Tesseract in PATH and common Windows install folders.\n"
+                            + "If Tesseract is installed elsewhere, add its folder to PATH and restart LuckyPOS.\n\nDetails: " + ex.getMessage(),
+                            "Invoice OCR", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        };
+        worker.execute();
+    }
+
+    private String runTesseract(File invoiceFile) throws IOException, InterruptedException {
+        String tesseractCommand = findTesseractCommand();
+        ProcessBuilder builder = new ProcessBuilder(
+                tesseractCommand,
+                invoiceFile.getAbsolutePath(),
+                "stdout",
+                "-l",
+                "eng",
+                "--psm",
+                "6");
+        configureTesseractEnvironment(builder, tesseractCommand);
+        builder.redirectErrorStream(true);
+        Process process = builder.start();
+        String output = new String(process.getInputStream().readAllBytes());
+        int exitCode = process.waitFor();
+        if (exitCode != 0 || output.trim().isEmpty()) {
+            throw new IOException(output.trim().isEmpty() ? "Tesseract returned no text." : output.trim());
+        }
+        return output;
+    }
+
+    private String findTesseractCommand() {
+        String configured = System.getProperty("luckypos.tesseract.path");
+        if (isExecutableFile(configured)) {
+            return configured;
+        }
+
+        String envPath = System.getenv("TESSERACT_PATH");
+        if (isExecutableFile(envPath)) {
+            return envPath;
+        }
+
+        String pathValue = System.getenv("PATH");
+        if (pathValue != null) {
+            for (String folder : pathValue.split(Pattern.quote(File.pathSeparator))) {
+                if (!folder.trim().isEmpty()) {
+                    Path candidate = Paths.get(folder, "tesseract.exe");
+                    if (isExecutableFile(candidate.toString())) {
+                        return candidate.toString();
+                    }
+                }
+            }
+        }
+
+        String[] commonWindowsPaths = {
+            "C:\\Program Files\\Tesseract-OCR\\tesseract.exe",
+            "C:\\Program Files (x86)\\Tesseract-OCR\\tesseract.exe"
+        };
+        for (String path : commonWindowsPaths) {
+            if (isExecutableFile(path)) {
+                return path;
+            }
+        }
+
+        return "tesseract";
+    }
+
+    private boolean isExecutableFile(String path) {
+        return path != null && !path.trim().isEmpty() && Files.isRegularFile(Paths.get(path.trim()));
+    }
+
+    private void configureTesseractEnvironment(ProcessBuilder builder, String tesseractCommand) {
+        Path tesseractPath = Paths.get(tesseractCommand);
+        Path installFolder = tesseractPath.getParent();
+        if (installFolder == null) {
+            return;
+        }
+
+        Path tessdataFolder = installFolder.resolve("tessdata");
+        if (Files.isDirectory(tessdataFolder)) {
+            builder.environment().putIfAbsent("TESSDATA_PREFIX", tessdataFolder.toString());
+        }
+    }
+
+    private List<InvoiceProductDraft> parseInvoiceText(String rawText) {
+        List<InvoiceProductDraft> drafts = new ArrayList<>();
+        String[] lines = rawText.split("\\R");
+        for (String line : lines) {
+            InvoiceProductDraft draft = parseInvoiceLine(line);
+            if (draft != null) {
+                drafts.add(draft);
+            }
+        }
+        return drafts;
+    }
+
+    private InvoiceProductDraft parseInvoiceLine(String line) {
+        String cleaned = line == null ? "" : line.trim().replaceAll("[|]+", " ").replaceAll("\\s{2,}", " ");
+        if (cleaned.length() < 5 || cleaned.matches(".*(?i)(invoice|supplier|subtotal|total|amount|vat|tax|date|receipt).*")) {
+            return null;
+        }
+
+        String[] tokens = cleaned.split("\\s+");
+        if (tokens.length < 10 || !tokens[0].matches("\\d{5,}")) {
+            return null;
+        }
+
+        int retailIndex = findRetailPriceIndex(tokens);
+        if (retailIndex < 3 || retailIndex + 6 >= tokens.length) {
+            return null;
+        }
+
+        int supplierIndex = tokens.length - 2;
+        int costIndex = tokens.length - 1;
+        if (!isNumericToken(tokens[supplierIndex]) || !isNumericToken(tokens[costIndex])) {
+            return null;
+        }
+
+        String namePart = joinTokens(tokens, 1, retailIndex - 1);
+        if (namePart.isEmpty()) {
+            return null;
+        }
+
+        InvoiceProductDraft draft = new InvoiceProductDraft();
+        draft.include = true;
+        draft.barcode = tokens[0];
+        draft.name = cleanOcrText(namePart.toLowerCase());
+        draft.size = cleanOcrText(tokens[retailIndex - 1].toLowerCase());
+        draft.retailPrice = parseNumberToken(tokens[retailIndex]);
+        draft.xlPrice = parseNumberToken(tokens[retailIndex + 1]);
+        draft.xxlPrice = parseNumberToken(tokens[retailIndex + 2]);
+        draft.quantity = normalizeQuantityToken(tokens[retailIndex + 3]);
+        draft.category = cleanOcrText(joinTokens(tokens, retailIndex + 4, supplierIndex));
+        draft.supplierId = tokens[supplierIndex];
+        draft.costPrice = normalizeCostToken(tokens[costIndex], draft.retailPrice);
+        return draft;
+    }
+
+    private int findRetailPriceIndex(String[] tokens) {
+        for (int i = 2; i + 3 < tokens.length; i++) {
+            if (isNumericToken(tokens[i]) && isNumericToken(tokens[i + 1])
+                    && isNumericToken(tokens[i + 2]) && isNumericToken(tokens[i + 3])) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private boolean isNumericToken(String token) {
+        return token != null && token.matches("\\d+(?:[,.]\\d+)?");
+    }
+
+    private double parseNumberToken(String token) {
+        return Double.parseDouble(token.replace(",", ""));
+    }
+
+    private int normalizeQuantityToken(String token) {
+        double quantityValue = parseNumberToken(token);
+        if (!token.contains(".") && token.length() == 2 && token.endsWith("0")) {
+            quantityValue = quantityValue / 10.0;
+        }
+        return Math.max(1, (int) Math.round(quantityValue));
+    }
+
+    private double normalizeCostToken(String token, double retailPrice) {
+        double costValue = parseNumberToken(token);
+        while (!token.contains(".") && costValue > retailPrice && costValue >= 100000) {
+            costValue = costValue / 10.0;
+        }
+        return costValue;
+    }
+
+    private String joinTokens(String[] tokens, int startInclusive, int endExclusive) {
+        StringBuilder builder = new StringBuilder();
+        for (int i = startInclusive; i < endExclusive && i < tokens.length; i++) {
+            if (i >= 0) {
+                if (builder.length() > 0) {
+                    builder.append(' ');
+                }
+                builder.append(tokens[i]);
+            }
+        }
+        return builder.toString().trim();
+    }
+
+    private String cleanOcrText(String value) {
+        return value == null ? "" : value.replaceFirst("^[^A-Za-z0-9]+", "").trim();
+    }
+
+    private void showInvoiceReviewDialog(String rawText, List<InvoiceProductDraft> drafts) {
+        JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Review Invoice Products", Dialog.ModalityType.APPLICATION_MODAL);
+        dialog.setLayout(new BorderLayout(10, 10));
+        dialog.getContentPane().setBackground(new Color(248, 250, 252));
+
+        DefaultTableModel model = new DefaultTableModel(
+                new Object[]{"Use", "Barcode", "Name", "Size", "Cost", "Retail", "XL", "XXL", "Qty", "Category", "Supplier ID"}, 0) {
+            @Override
+            public Class<?> getColumnClass(int columnIndex) {
+                return columnIndex == 0 ? Boolean.class : Object.class;
+            }
+
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return true;
+            }
+        };
+        for (InvoiceProductDraft draft : drafts) {
+            model.addRow(new Object[]{
+                draft.include, draft.barcode, draft.name, draft.size,
+                formatNumber(draft.costPrice), formatNumber(draft.retailPrice),
+                formatNumber(draft.xlPrice), formatNumber(draft.xxlPrice),
+                draft.quantity, draft.category, draft.supplierId
+            });
+        }
+
+        JTable reviewTable = new JTable(model);
+        reviewTable.setRowHeight(28);
+        reviewTable.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        reviewTable.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
+        reviewTable.getColumnModel().getColumn(0).setPreferredWidth(45);
+        reviewTable.getColumnModel().getColumn(2).setPreferredWidth(220);
+
+        JTextArea rawTextArea = new JTextArea(rawText);
+        rawTextArea.setEditable(false);
+        rawTextArea.setLineWrap(true);
+        rawTextArea.setWrapStyleWord(true);
+        rawTextArea.setFont(new Font("Consolas", Font.PLAIN, 12));
+
+        JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
+                new JScrollPane(reviewTable), new JScrollPane(rawTextArea));
+        splitPane.setResizeWeight(0.7);
+
+        JLabel title = new JLabel("Edit the OCR results before saving. Untick rows you do not want to import.");
+        title.setBorder(BorderFactory.createEmptyBorder(10, 12, 0, 12));
+        title.setFont(new Font("Segoe UI", Font.BOLD, 13));
+
+        JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
+        JButton addRow = new JButton("Add Row");
+        JButton removeRow = new JButton("Remove Row");
+        JButton saveRows = new JButton("Save Selected");
+        JButton cancel = new JButton("Cancel");
+
+        addRow.addActionListener(e -> model.addRow(new Object[]{true, "", "", "", "0", "0", "0", "0", 1, category.getText().trim(), supplier_id.getText().trim()}));
+        removeRow.addActionListener(e -> {
+            int selected = reviewTable.getSelectedRow();
+            if (selected >= 0) {
+                model.removeRow(reviewTable.convertRowIndexToModel(selected));
+            }
+        });
+        saveRows.addActionListener(e -> {
+            int saved = saveReviewedInvoiceRows(model);
+            if (saved > 0) {
+                dialog.dispose();
+                Update_table();
+                JOptionPane.showMessageDialog(product.this, saved + " product(s) imported successfully.", "Invoice OCR", JOptionPane.INFORMATION_MESSAGE);
+            }
+        });
+        cancel.addActionListener(e -> dialog.dispose());
+
+        buttons.add(addRow);
+        buttons.add(removeRow);
+        buttons.add(saveRows);
+        buttons.add(cancel);
+
+        if (drafts.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "OCR completed, but no product lines were detected. You can add rows manually in the review window.",
+                    "Invoice OCR", JOptionPane.INFORMATION_MESSAGE);
+        }
+
+        dialog.add(title, BorderLayout.NORTH);
+        dialog.add(splitPane, BorderLayout.CENTER);
+        dialog.add(buttons, BorderLayout.SOUTH);
+        dialog.setSize(1050, 650);
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
+    }
+
+    private int saveReviewedInvoiceRows(DefaultTableModel model) {
+        int saved = 0;
+        String sql = "Insert into products (barcode,name,size,price,price2,price3,quantity,category, supplier_id, cost_price) values(?,?,?,?,?,?,?,?,?,?)";
+        String costSql = "insert into sub_cost_price(product_name,sub_costp,quantity) values(?,?,?)";
+
+        try {
+            conn.setAutoCommit(false);
+            try (PreparedStatement productStatement = conn.prepareStatement(sql);
+                 PreparedStatement costStatement = conn.prepareStatement(costSql)) {
+                for (int row = 0; row < model.getRowCount(); row++) {
+                    if (!Boolean.TRUE.equals(model.getValueAt(row, 0))) {
+                        continue;
+                    }
+
+                    String nameValue = stringCell(model, row, 2).trim().toLowerCase();
+                    if (nameValue.isEmpty()) {
+                        throw new IllegalArgumentException("Row " + (row + 1) + " is missing the product name.");
+                    }
+
+                    int quantityValue = parseIntCell(model, row, 8, "quantity");
+                    double costValue = parseDoubleCell(model, row, 4, "cost price");
+                    double retailValue = parseDoubleCell(model, row, 5, "retail price");
+                    double xlValue = parseDoubleCell(model, row, 6, "XL price");
+                    double xxlValue = parseDoubleCell(model, row, 7, "XXL price");
+                    int supplierValue = parseIntCell(model, row, 10, "supplier ID");
+
+                    productStatement.setString(1, stringCell(model, row, 1).trim().toLowerCase());
+                    productStatement.setString(2, nameValue);
+                    productStatement.setString(3, stringCell(model, row, 3).trim().toLowerCase());
+                    productStatement.setFloat(4, (float) retailValue);
+                    productStatement.setFloat(5, (float) xlValue);
+                    productStatement.setFloat(6, (float) xxlValue);
+                    productStatement.setInt(7, quantityValue);
+                    productStatement.setString(8, stringCell(model, row, 9).trim());
+                    productStatement.setInt(9, supplierValue);
+                    productStatement.setFloat(10, (float) costValue);
+                    productStatement.executeUpdate();
+
+                    costStatement.setString(1, nameValue);
+                    costStatement.setFloat(2, (float) (costValue * quantityValue));
+                    costStatement.setInt(3, quantityValue);
+                    costStatement.executeUpdate();
+                    saved++;
+                }
+            }
+            conn.commit();
+        } catch (Exception ex) {
+            try {
+                conn.rollback();
+            } catch (SQLException rollbackEx) {
+                Logger.getLogger(product.class.getName()).log(Level.SEVERE, null, rollbackEx);
+            }
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Invoice OCR", JOptionPane.ERROR_MESSAGE);
+            saved = 0;
+        } finally {
+            try {
+                conn.setAutoCommit(true);
+            } catch (SQLException ex) {
+                Logger.getLogger(product.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        return saved;
+    }
+
+    private String stringCell(DefaultTableModel model, int row, int column) {
+        Object value = model.getValueAt(row, column);
+        return value == null ? "" : value.toString();
+    }
+
+    private int parseIntCell(DefaultTableModel model, int row, int column, String label) {
+        String value = stringCell(model, row, column).trim();
+        if (value.isEmpty()) {
+            throw new IllegalArgumentException("Row " + (row + 1) + " is missing " + label + ".");
+        }
+        return Integer.parseInt(value.replaceAll("[^0-9-]", ""));
+    }
+
+    private double parseDoubleCell(DefaultTableModel model, int row, int column, String label) {
+        String value = stringCell(model, row, column).trim().replace(",", "");
+        if (value.isEmpty()) {
+            throw new IllegalArgumentException("Row " + (row + 1) + " is missing " + label + ".");
+        }
+        return Double.parseDouble(value.replaceAll("[^0-9.-]", ""));
+    }
+
+    private String formatNumber(double value) {
+        return String.format(java.util.Locale.US, "%.2f", value);
+    }
+
+    private static class InvoiceProductDraft {
+        boolean include;
+        String barcode;
+        String name;
+        String size;
+        double costPrice;
+        double retailPrice;
+        double xlPrice;
+        double xxlPrice;
+        int quantity;
+        String category;
+        String supplierId;
     }
 }

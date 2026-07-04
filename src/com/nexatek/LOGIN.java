@@ -3,6 +3,8 @@
  */
 package com.nexatek;
 
+import com.formdev.flatlaf.FlatClientProperties;
+import com.formdev.flatlaf.extras.FlatSVGIcon;
 import java.awt.*;
 import java.awt.event.*;
 import java.sql.Connection;
@@ -11,6 +13,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import javax.swing.*;
 import javax.swing.border.*;
+import net.miginfocom.swing.MigLayout;
 
 /**
  * Professional Login Page
@@ -33,11 +36,13 @@ public class LOGIN extends javax.swing.JFrame {
     }
 
     private void initCustomComponents() {
-        setUndecorated(true);  // Remove title bar/navbar
+        AppTheme.install();
+        setUndecorated(true);
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setSize(900, 550);
+        setMinimumSize(new Dimension(900, 560));
+        setSize(980, 620);
         setLocationRelativeTo(null);
-        setResizable(false);
+        setResizable(true);
         
         // Set application icon for taskbar
         try {
@@ -46,8 +51,8 @@ public class LOGIN extends javax.swing.JFrame {
             System.out.println("Could not load icon: " + e.getMessage());
         }
         
-        // Main container
-        JPanel mainPanel = new JPanel(new GridLayout(1, 2));
+        JPanel mainPanel = new JPanel(new MigLayout("insets 0, fill", "[46%,fill][54%,fill]", "[fill]"));
+        mainPanel.putClientProperty(FlatClientProperties.STYLE, "background:#f6f7fb;");
         
         // ============ LEFT PANEL - Branding ============
         JPanel leftPanel = new JPanel() {
@@ -107,36 +112,35 @@ public class LOGIN extends javax.swing.JFrame {
                 g2d.fillRect(0, 0, getWidth(), 4);
             }
         };
-        leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
+        leftPanel.setLayout(new MigLayout("insets 42 34 42 34, fill, wrap", "[center]", "[][grow][]"));
         
         // Branding text on left panel
         JPanel brandingPanel = new JPanel();
         brandingPanel.setOpaque(false);
-        brandingPanel.setLayout(new BoxLayout(brandingPanel, BoxLayout.Y_AXIS));
-        brandingPanel.setBorder(new EmptyBorder(40, 30, 0, 30));
+        brandingPanel.setLayout(new MigLayout("insets 0, wrap, align center", "[center]"));
         
         JLabel iconLabel = new JLabel("\u26A1");
         iconLabel.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 48));
         iconLabel.setForeground(new Color(255, 193, 7));
-        iconLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         
-        JLabel brandLabel = new JLabel("LUCKY ELECTRICALS");
+        JLabel brandLabel = new JLabel("KEBZ PHONE SERVICE CENTRE");
         brandLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
         brandLabel.setForeground(Color.WHITE);
-        brandLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         
         JLabel tagLabel = new JLabel("Point of Sale System");
         tagLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         tagLabel.setForeground(new Color(255, 193, 7));
-        tagLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         
         brandingPanel.add(iconLabel);
-        brandingPanel.add(Box.createVerticalStrut(10));
-        brandingPanel.add(brandLabel);
-        brandingPanel.add(Box.createVerticalStrut(5));
-        brandingPanel.add(tagLabel);
+        brandingPanel.add(brandLabel, "gapy 10 0");
+        brandingPanel.add(tagLabel, "gapy 3 0");
         
-        leftPanel.add(brandingPanel);
+        JLabel sideText = new JLabel("<html><div style='text-align:center;'>Secure sales, repairs, inventory and reporting<br>for your service centre.</div></html>");
+        sideText.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        sideText.setForeground(new Color(205, 220, 235));
+
+        leftPanel.add(brandingPanel, "growx");
+        leftPanel.add(sideText, "growx, align center bottom");
         
         // ============ RIGHT PANEL - Login Form ============
         JPanel rightPanel = new JPanel() {
@@ -155,60 +159,53 @@ public class LOGIN extends javax.swing.JFrame {
                 g2d.fillRect(0, 0, getWidth(), getHeight());
             }
         };
-        rightPanel.setLayout(new GridBagLayout());
+        rightPanel.setLayout(new MigLayout("insets 30 24 30 24, fill", "[center]", "[center]"));
         
         // Form container
         JPanel formContainer = new JPanel();
-        formContainer.setOpaque(false);
-        formContainer.setLayout(new BoxLayout(formContainer, BoxLayout.Y_AXIS));
-        formContainer.setBorder(new EmptyBorder(20, 60, 20, 60));
+        formContainer.setLayout(new MigLayout("insets 30 36 28 36, fillx, wrap, width 380:420:460", "[fill]"));
+        formContainer.putClientProperty(FlatClientProperties.STYLE, ""
+                + "arc:8;"
+                + "background:#FFFFFF;"
+                + "border:1,1,1,1,#e5e7eb,,8;");
         
         // Welcome text
         JLabel welcomeLabel = new JLabel("Welcome Back!");
-        welcomeLabel.setFont(new Font("Segoe UI", Font.BOLD, 32));
+        welcomeLabel.putClientProperty(FlatClientProperties.STYLE, "font:bold +15;");
         welcomeLabel.setForeground(new Color(30, 45, 65));
-        welcomeLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        welcomeLabel.setHorizontalAlignment(SwingConstants.CENTER);
         
         JLabel subtitleLabel = new JLabel("Sign in to continue to your dashboard");
-        subtitleLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        subtitleLabel.putClientProperty(FlatClientProperties.STYLE, "font:+1;");
         subtitleLabel.setForeground(new Color(100, 120, 140));
-        subtitleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        subtitleLabel.setHorizontalAlignment(SwingConstants.CENTER);
         
         // Username field
         JLabel userLabel = new JLabel("Username");
         userLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
         userLabel.setForeground(new Color(60, 75, 90));
-        userLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         
         username = new JTextField();
         username.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        username.setPreferredSize(new Dimension(320, 45));
-        username.setMaximumSize(new Dimension(320, 45));
-        username.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(200, 210, 220), 1, true),
-            BorderFactory.createEmptyBorder(10, 15, 10, 15)
-        ));
         username.setBackground(Color.WHITE);
         username.setForeground(new Color(30, 45, 65));
         username.setCaretColor(new Color(40, 160, 90));
+        username.putClientProperty(FlatClientProperties.STYLE, AppTheme.roundedFieldStyle());
+        AppTheme.putTextFieldPlaceholder(username, "Enter your username");
         
         // Password field
         JLabel passLabel = new JLabel("Password");
         passLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
         passLabel.setForeground(new Color(60, 75, 90));
-        passLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         
         password = new JPasswordField();
         password.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        password.setPreferredSize(new Dimension(320, 45));
-        password.setMaximumSize(new Dimension(320, 45));
-        password.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(200, 210, 220), 1, true),
-            BorderFactory.createEmptyBorder(10, 15, 10, 15)
-        ));
         password.setBackground(Color.WHITE);
         password.setForeground(new Color(30, 45, 65));
         password.setCaretColor(new Color(40, 160, 90));
+        password.putClientProperty(FlatClientProperties.STYLE, AppTheme.roundedFieldStyle());
+        AppTheme.putTextFieldPlaceholder(password, "Enter your password");
+        installRevealButton(password);
         
         // Add Enter key listener to password field
         password.addKeyListener(new KeyAdapter() {
@@ -223,26 +220,9 @@ public class LOGIN extends javax.swing.JFrame {
         // Login button
         loginbtn = new JButton("SIGN IN");
         loginbtn.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        loginbtn.setForeground(Color.WHITE);
-        loginbtn.setBackground(new Color(40, 160, 90));
-        loginbtn.setPreferredSize(new Dimension(320, 50));
-        loginbtn.setMaximumSize(new Dimension(320, 50));
-        loginbtn.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        loginbtn.putClientProperty(FlatClientProperties.STYLE, AppTheme.primaryButtonStyle());
         loginbtn.setFocusPainted(false);
         loginbtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        loginbtn.setAlignmentX(Component.CENTER_ALIGNMENT);
-        
-        // Hover effect
-        loginbtn.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                loginbtn.setBackground(new Color(35, 140, 80));
-            }
-            @Override
-            public void mouseExited(MouseEvent e) {
-                loginbtn.setBackground(new Color(40, 160, 90));
-            }
-        });
         
         loginbtn.addActionListener(e -> performLogin());
         
@@ -250,18 +230,18 @@ public class LOGIN extends javax.swing.JFrame {
         statusLabel = new JLabel(" ");
         statusLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         statusLabel.setForeground(new Color(220, 53, 69));
-        statusLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        statusLabel.setHorizontalAlignment(SwingConstants.CENTER);
         
         // Forgot password
         JLabel forgotLabel = new JLabel("Forgot username / password?");
         forgotLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         forgotLabel.setForeground(new Color(100, 120, 140));
         forgotLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        forgotLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        forgotLabel.setHorizontalAlignment(SwingConstants.CENTER);
         forgotLabel.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
-                forgotLabel.setForeground(new Color(40, 160, 90));
+                forgotLabel.setForeground(Color.decode(AppTheme.ACCENT));
             }
             @Override
             public void mouseExited(MouseEvent e) {
@@ -270,39 +250,57 @@ public class LOGIN extends javax.swing.JFrame {
         });
         
         // Footer
-        JLabel footerLabel = new JLabel("\u00A9 2024 Lucky Electricals - Powered by Nexatek");
+        JLabel footerLabel = new JLabel("\u00A9 2024 KEBZ PHONE SERVICE CENTRE - Powered by Necxtek");
         footerLabel.setFont(new Font("Segoe UI", Font.PLAIN, 10));
         footerLabel.setForeground(new Color(150, 160, 170));
-        footerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        footerLabel.setHorizontalAlignment(SwingConstants.CENTER);
         
         // Add components to form
         formContainer.add(welcomeLabel);
-        formContainer.add(Box.createVerticalStrut(8));
-        formContainer.add(subtitleLabel);
-        formContainer.add(Box.createVerticalStrut(35));
+        formContainer.add(subtitleLabel, "gapy 4 26");
         formContainer.add(userLabel);
-        formContainer.add(Box.createVerticalStrut(8));
-        formContainer.add(username);
-        formContainer.add(Box.createVerticalStrut(20));
-        formContainer.add(passLabel);
-        formContainer.add(Box.createVerticalStrut(8));
-        formContainer.add(password);
-        formContainer.add(Box.createVerticalStrut(10));
-        formContainer.add(statusLabel);
-        formContainer.add(Box.createVerticalStrut(20));
-        formContainer.add(loginbtn);
-        formContainer.add(Box.createVerticalStrut(20));
-        formContainer.add(forgotLabel);
-        formContainer.add(Box.createVerticalStrut(40));
+        formContainer.add(username, "h 44!");
+        formContainer.add(passLabel, "gapy 12 0");
+        formContainer.add(password, "h 44!");
+        formContainer.add(statusLabel, "h 18!, gapy 8 8");
+        formContainer.add(loginbtn, "h 48!");
+        formContainer.add(forgotLabel, "gapy 14 22");
         formContainer.add(footerLabel);
         
         rightPanel.add(formContainer);
         
         // Add panels to main
-        mainPanel.add(leftPanel);
-        mainPanel.add(rightPanel);
+        mainPanel.add(leftPanel, "grow");
+        mainPanel.add(rightPanel, "grow");
         
         setContentPane(mainPanel);
+    }
+
+    private void installRevealButton(JPasswordField txt) {
+        FlatSVGIcon iconEye = new FlatSVGIcon("com/nexatek/resources/login_register/icon/eye.svg", 0.3f);
+        FlatSVGIcon iconHide = new FlatSVGIcon("com/nexatek/resources/login_register/icon/hide.svg", 0.3f);
+
+        JToolBar toolBar = new JToolBar();
+        toolBar.setFloatable(false);
+        toolBar.putClientProperty(FlatClientProperties.STYLE, "margin:0,0,0,5;background:null;");
+        JButton button = new JButton(iconEye);
+        button.putClientProperty(FlatClientProperties.STYLE, AppTheme.iconButtonStyle());
+        button.setToolTipText("Show password");
+
+        button.addActionListener(new ActionListener() {
+            private final char defaultEchoChar = txt.getEchoChar();
+            private boolean show;
+
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                show = !show;
+                button.setIcon(show ? iconHide : iconEye);
+                button.setToolTipText(show ? "Hide password" : "Show password");
+                txt.setEchoChar(show ? (char) 0 : defaultEchoChar);
+            }
+        });
+        toolBar.add(button);
+        txt.putClientProperty(FlatClientProperties.TEXT_FIELD_TRAILING_COMPONENT, toolBar);
     }
     
     private void performLogin() {
@@ -367,6 +365,7 @@ public class LOGIN extends javax.swing.JFrame {
                             counter count = new counter();
                             count.pack();
                             count.counter.setText(loggedUser);
+                            count.setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
                             count.setLocationRelativeTo(null);
                             count.setVisible(true);
                         }
@@ -404,16 +403,7 @@ public class LOGIN extends javax.swing.JFrame {
     }
 
     public static void main(String args[]) {
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (Exception ex) {
-            // Use default
-        }
+        AppTheme.install();
 
         java.awt.EventQueue.invokeLater(() -> {
             new LOGIN().setVisible(true);

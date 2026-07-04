@@ -3,6 +3,8 @@ package com.nexatek;
 
 import static com.nexatek.sales_admin.cash;
 import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.KeyEvent;
 import static java.lang.Thread.sleep;
@@ -14,23 +16,25 @@ import java.sql.Statement;
 import java.time.LocalDate;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.JFrame;
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
+import javax.swing.border.LineBorder;
 import javax.swing.table.DefaultTableModel;
+import net.miginfocom.swing.MigLayout;
 import net.proteanit.sql.DbUtils;
-import net.sf.jasperreports.engine.JRException;
-import net.sf.jasperreports.engine.JasperCompileManager;
-import net.sf.jasperreports.engine.JasperFillManager;
-import net.sf.jasperreports.engine.JasperPrint;
-import net.sf.jasperreports.engine.JasperReport;
-import net.sf.jasperreports.engine.design.JRDesignQuery;
-import net.sf.jasperreports.engine.design.JasperDesign;
-import net.sf.jasperreports.engine.xml.JRXmlLoader;
-import net.sf.jasperreports.view.JasperViewer;
 
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
@@ -57,6 +61,7 @@ ResultSet rst;
         } catch (Exception e) {
             System.out.println("Could not load icon: " + e.getMessage());
         }
+        setupResponsiveCashierLayout();
         
         items.getTableHeader().setFont( new Font("segoe UI", Font.BOLD,18));
         items.getTableHeader().setOpaque(true);
@@ -75,14 +80,426 @@ ResultSet rst;
         currentdate();
         Update_table();
         refreshDashboard();
+        setMinimumSize(new Dimension(1050, 680));
+        setExtendedState(javax.swing.JFrame.MAXIMIZED_BOTH);
+    }
+
+    private void setupResponsiveCashierLayout() {
+        setTitle("LuckyPOS Cashier");
+        getContentPane().removeAll();
+        getContentPane().setLayout(new MigLayout(
+                "insets 4, gapy 3, fill, wrap 1",
+                "[grow,fill]",
+                "[42!][46!][104:112:124,fill][grow,fill][50!]"));
+
+        configureCashierTitleBar();
+        configureCashierHeader();
+        configureProductInputPanel();
+        configureTablePanels();
+        JPanel workspace = createCashierWorkspace();
+        JPanel actions = createCashierActionsPanel();
+
+        getContentPane().add(jPanel5, "growx");
+        getContentPane().add(jPanel2, "growx");
+        getContentPane().add(jPanel3, "growx, h 104:112:124");
+        getContentPane().add(workspace, "grow");
+        getContentPane().add(actions, "growx");
+        getContentPane().revalidate();
+        getContentPane().repaint();
+    }
+
+    private void configureCashierTitleBar() {
+        jPanel5.removeAll();
+        jPanel5.setLayout(new MigLayout("insets 5 10 5 10, fillx", "[][grow][]8[]", "[fill]"));
+        jPanel5.setBackground(new Color(25, 42, 65));
+        jPanel5.setBorder(BorderFactory.createEmptyBorder());
+
+        jLabel8.setText("LUCKY ELECTRICALS");
+        jLabel8.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        jLabel8.setForeground(Color.WHITE);
+
+        styleCashierButton(jToggleButton9, new Color(52, 73, 94), Color.WHITE);
+        styleCashierButton(poweroff, new Color(190, 50, 45), Color.WHITE);
+
+        jPanel5.add(jLabel8);
+        jPanel5.add(new JLabel(), "grow");
+        jPanel5.add(jToggleButton9, "w 120!, h 32!");
+        jPanel5.add(poweroff, "w 130!, h 32!");
+    }
+
+    private void configureCashierHeader() {
+        jPanel2.removeAll();
+        jPanel2.setLayout(new MigLayout(
+                "insets 5 10 5 10, gapx 6, fillx",
+                "[][70!]12[120:155:190]12[][62!]14[][grow,fill]12[96!]8[82!]14[][110!]",
+                "[fill]"));
+        jPanel2.setBackground(new Color(248, 248, 248));
+        jPanel2.setBorder(BorderFactory.createEtchedBorder());
+
+        Font labelFont = new Font("Segoe UI", Font.BOLD, 12);
+        Font valueFont = new Font("Segoe UI", Font.BOLD, 14);
+        jLabel1.setText("Receipt:");
+        jLabel1.setFont(labelFont);
+        invoice_no.setFont(new Font("Segoe UI", Font.BOLD, 17));
+        selectcombo.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        jLabel2.setText("Stock:");
+        jLabel2.setFont(labelFont);
+        stock_qty.setFont(valueFont);
+        stock_qty.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        stock_qty.setForeground(new Color(0, 102, 204));
+        JLabel cashierLabel = new JLabel("Cashier:");
+        cashierLabel.setFont(labelFont);
+        counter.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        counter.setOpaque(true);
+        counter.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        counter.setBackground(new Color(240, 255, 240));
+        date.setFont(valueFont);
+        date.setEditable(false);
+        time.setFont(valueFont);
+        time.setEditable(false);
+        jLabel13.setText("Today:");
+        jLabel13.setFont(labelFont);
+        totalsales.setFont(valueFont);
+        totalsales.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+        check.setVisible(false);
+
+        jPanel2.add(jLabel1);
+        jPanel2.add(invoice_no);
+        jPanel2.add(selectcombo, "growx");
+        jPanel2.add(jLabel2);
+        jPanel2.add(stock_qty);
+        jPanel2.add(cashierLabel);
+        jPanel2.add(counter, "growx");
+        jPanel2.add(date, "growx");
+        jPanel2.add(time, "growx");
+        jPanel2.add(jLabel13);
+        jPanel2.add(totalsales);
+    }
+
+    private void configureProductInputPanel() {
+        jPanel3.removeAll();
+        jPanel3.setLayout(new MigLayout(
+                "insets 8 10 8 10, gapx 10, gapy 7, fillx, wrap 6",
+                "[right][grow,fill][right][grow,fill][right][grow,fill]",
+                "[34!][34!]"));
+        jPanel3.setBorder(BorderFactory.createTitledBorder(
+                BorderFactory.createEtchedBorder(), "Product Details",
+                javax.swing.border.TitledBorder.LEFT,
+                javax.swing.border.TitledBorder.TOP,
+                new Font("Segoe UI", Font.BOLD, 12),
+                new Color(0, 102, 0)));
+
+        Font labelFont = new Font("Segoe UI", Font.BOLD, 13);
+        Font fieldFont = new Font("Segoe UI", Font.BOLD, 16);
+        JLabel[] labels = {jLabel3, jLabel4, jLabel5, jLabel6, jLabel7, jLabel12};
+        for (JLabel label : labels) {
+            label.setFont(labelFont);
+            label.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+        }
+        JTextField[] fields = {barcode, name, quantity, price, size, id};
+        for (JTextField field : fields) {
+            field.setFont(fieldFont);
+            field.setPreferredSize(new Dimension(100, 34));
+            field.setBorder(new LineBorder(new Color(0, 180, 180), 1, true));
+            field.setHorizontalAlignment(JTextField.LEFT);
+        }
+        barcode.setBackground(new Color(255, 255, 240));
+        price.setBackground(new Color(255, 255, 240));
+        quantity.setBackground(new Color(240, 255, 240));
+        quantity.setHorizontalAlignment(JTextField.LEFT);
+        price.setHorizontalAlignment(JTextField.LEFT);
+
+        jLabel3.setText("Barcode:");
+        jLabel4.setText("Name:");
+        jLabel6.setText("Qty:");
+        jLabel5.setText("Price:");
+        jLabel12.setText("Size:");
+        jLabel7.setText("ID:");
+
+        jPanel3.add(jLabel3);
+        jPanel3.add(barcode, "h 34!");
+        jPanel3.add(jLabel4);
+        jPanel3.add(name, "h 34!");
+        jPanel3.add(jLabel6);
+        jPanel3.add(quantity, "h 34!");
+        jPanel3.add(jLabel5);
+        jPanel3.add(price, "h 34!");
+        jPanel3.add(jLabel12);
+        jPanel3.add(size, "h 34!");
+        jPanel3.add(jLabel7);
+        jPanel3.add(id, "h 34!");
+    }
+
+    private void configureTablePanels() {
+        products_table.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        products_table.setRowHeight(22);
+        products_table.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_ALL_COLUMNS);
+        products_table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 11));
+        products_table.getTableHeader().setBackground(new Color(242, 242, 242));
+        products_table.getTableHeader().setForeground(new Color(0, 0, 180));
+
+        items.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        items.setRowHeight(22);
+        items.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_ALL_COLUMNS);
+        items.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 11));
+        items.getTableHeader().setBackground(new Color(242, 242, 242));
+        items.getTableHeader().setForeground(new Color(0, 0, 180));
+
+        jPanel6.removeAll();
+        jPanel6.setLayout(new MigLayout("insets 0, fill", "[grow,fill]", "[grow,fill]"));
+        jPanel6.setBorder(BorderFactory.createTitledBorder(
+                BorderFactory.createEtchedBorder(), "Products (Click to Select)",
+                javax.swing.border.TitledBorder.LEFT,
+                javax.swing.border.TitledBorder.TOP,
+                new Font("Segoe UI", Font.BOLD, 10),
+                new Color(0, 102, 0)));
+        jPanel6.add(jScrollPane2, "grow");
+
+        jPanel7.removeAll();
+        jPanel7.setLayout(new MigLayout("insets 6, gapy 2, fillx, wrap 1", "[grow,fill]", "[][]8[][]"));
+        jPanel7.setBorder(BorderFactory.createTitledBorder(
+                BorderFactory.createEtchedBorder(), "Summary",
+                javax.swing.border.TitledBorder.LEFT,
+                javax.swing.border.TitledBorder.TOP,
+                new Font("Segoe UI", Font.BOLD, 10),
+                new Color(0, 102, 0)));
+        jLabel10.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        jLabel11.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        total_amount.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        total_amount.setHorizontalAlignment(JTextField.RIGHT);
+        change.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        change.setHorizontalAlignment(JTextField.RIGHT);
+        jPanel7.add(jLabel10);
+        jPanel7.add(total_amount, "h 30!");
+        jPanel7.add(jLabel11);
+        jPanel7.add(change, "h 30!");
+    }
+
+    private void configureCashierProductsTable() {
+        products_table.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 11));
+        products_table.getTableHeader().setBackground(new Color(242, 242, 242));
+        products_table.getTableHeader().setForeground(new Color(0, 0, 180));
+        products_table.setRowHeight(24);
+        if (products_table.getColumnModel().getColumnCount() >= 6) {
+            products_table.getColumnModel().getColumn(0).setPreferredWidth(55);
+            products_table.getColumnModel().getColumn(1).setPreferredWidth(115);
+            products_table.getColumnModel().getColumn(2).setPreferredWidth(280);
+            products_table.getColumnModel().getColumn(3).setPreferredWidth(90);
+            products_table.getColumnModel().getColumn(4).setPreferredWidth(110);
+            products_table.getColumnModel().getColumn(5).setPreferredWidth(70);
+        }
+    }
+
+    private JPanel createCashierWorkspace() {
+        JPanel workspace = new JPanel(new MigLayout(
+                "insets 0, gapy 4, fill, wrap 1",
+                "[grow,fill]",
+                "[grow 62,fill][grow 38,fill]"));
+
+        JPanel lowerPanel = new JPanel(new MigLayout(
+                "insets 0, gap 4, fill",
+                "[grow 75,fill][190:230:300,fill]",
+                "[grow,fill]"));
+        JPanel cartPanel = new JPanel(new MigLayout("insets 0, fill", "[grow,fill]", "[grow,fill]"));
+        cartPanel.setBorder(BorderFactory.createTitledBorder(
+                BorderFactory.createEtchedBorder(), "Cart",
+                javax.swing.border.TitledBorder.LEFT,
+                javax.swing.border.TitledBorder.TOP,
+                new Font("Segoe UI", Font.BOLD, 10),
+                new Color(0, 102, 0)));
+        cartPanel.add(jScrollPane1, "grow");
+
+        lowerPanel.add(cartPanel, "grow");
+        lowerPanel.add(jPanel7, "growy");
+        workspace.add(jPanel6, "grow");
+        workspace.add(lowerPanel, "grow");
+        return workspace;
+    }
+
+    private JPanel createCashierActionsPanel() {
+        JPanel actions = new JPanel(new MigLayout(
+                "insets 4, gap 5, fillx",
+                "[grow,fill][grow,fill][grow,fill][grow,fill][70!][grow,fill][grow,fill]",
+                "[fill]"));
+        actions.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createEtchedBorder(),
+                BorderFactory.createEmptyBorder(2, 2, 2, 2)));
+        actions.setBackground(new Color(235, 235, 235));
+
+        styleCashierButton(add_to_cart, new Color(0, 102, 0), Color.WHITE);
+        styleCashierButton(remove, new Color(255, 51, 102), Color.WHITE);
+        styleCashierButton(removeall, new Color(153, 0, 0), Color.WHITE);
+        styleCashierLabel(cashpaid);
+        finish.setVisible(false);
+        styleCashierButton(view, new Color(70, 130, 180), Color.WHITE);
+        styleCashierButton(view_all, new Color(52, 73, 94), Color.WHITE);
+
+        invoice.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        invoice.setToolTipText("Invoice number");
+
+        actions.add(add_to_cart, "h 38!");
+        actions.add(remove, "h 38!");
+        actions.add(removeall, "h 38!");
+        actions.add(cashpaid, "h 38!");
+        actions.add(invoice, "h 30!");
+        actions.add(view, "h 38!");
+        actions.add(view_all, "h 38!");
+        return actions;
+    }
+
+    private void styleCashierButton(javax.swing.AbstractButton button, Color bg, Color fg) {
+        button.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        button.setBackground(bg);
+        button.setForeground(fg);
+        button.setFocusPainted(false);
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        button.setBorder(BorderFactory.createEmptyBorder(4, 8, 4, 8));
+        if (button.getIcon() instanceof javax.swing.ImageIcon) {
+            javax.swing.ImageIcon icon = (javax.swing.ImageIcon) button.getIcon();
+            java.awt.Image image = icon.getImage().getScaledInstance(22, 22, java.awt.Image.SCALE_SMOOTH);
+            button.setIcon(new javax.swing.ImageIcon(image));
+        }
+    }
+
+    private void styleCashierLabel(JLabel label) {
+        label.setOpaque(true);
+        label.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        label.setBackground(new Color(255, 204, 0));
+        label.setForeground(new Color(35, 35, 35));
+        label.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        label.setText("Paid Amt");
+        label.setIconTextGap(8);
+        try {
+            javax.swing.ImageIcon icon = new javax.swing.ImageIcon(getClass().getResource("/com/nexatek/images/img/icons8-samsung-pay-56.png"));
+            java.awt.Image image = icon.getImage().getScaledInstance(22, 22, java.awt.Image.SCALE_SMOOTH);
+            label.setIcon(new javax.swing.ImageIcon(image));
+        } catch (Exception ignored) {
+        }
+        label.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        label.setBorder(BorderFactory.createRaisedBevelBorder());
+    }
+
+    private void showCashierPaymentDialog() {
+        if (items.getRowCount() == 0) {
+            JOptionPane.showMessageDialog(this, "Please add items to the cart before recording payment.", "Empty Cart", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        JDialog dialog = new JDialog(this, "Payment Details", true);
+        dialog.setLayout(new MigLayout("insets 18, fillx, wrap 2", "[right]12[grow,fill]", "[][][][][]16[]"));
+        dialog.setResizable(false);
+
+        float totalDue = parseFloat(total_amount.getText(), 0f);
+        JTextField invoiceField = new JTextField(invoice_no.getText());
+        JTextField customerField = new JTextField(customer_name == null ? "" : customer_name);
+        JTextField phoneField = new JTextField(telephone_number == null ? "" : telephone_number);
+        JTextField totalField = new JTextField(String.format(Locale.US, "%.2f", totalDue));
+        JTextField paidField = new JTextField(cash == null ? "" : String.format(Locale.US, "%.2f", cash));
+        JTextField balanceField = new JTextField(change.getText());
+
+        invoiceField.setEditable(false);
+        totalField.setEditable(false);
+        balanceField.setEditable(false);
+        totalField.setHorizontalAlignment(JTextField.RIGHT);
+        paidField.setHorizontalAlignment(JTextField.RIGHT);
+        balanceField.setHorizontalAlignment(JTextField.RIGHT);
+        balanceField.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        balanceField.setForeground(new Color(204, 0, 0));
+
+        dialog.add(new JLabel("Invoice #:"));
+        dialog.add(invoiceField, "h 32!");
+        dialog.add(new JLabel("Customer Name:"));
+        dialog.add(customerField, "h 32!");
+        dialog.add(new JLabel("Phone Number:"));
+        dialog.add(phoneField, "h 32!");
+        dialog.add(new JLabel("Total Due:"));
+        dialog.add(totalField, "h 32!");
+        dialog.add(new JLabel("Paid Amount:"));
+        dialog.add(paidField, "h 32!");
+        dialog.add(new JLabel("Balance/Due:"));
+        dialog.add(balanceField, "h 32!");
+
+        javax.swing.event.DocumentListener paymentListener = new javax.swing.event.DocumentListener() {
+            private void updateBalance() {
+                float paid = parseFloat(paidField.getText(), 0f);
+                balanceField.setText(String.format(Locale.US, "%.2f", paid - totalDue));
+            }
+
+            @Override
+            public void insertUpdate(javax.swing.event.DocumentEvent e) {
+                updateBalance();
+            }
+
+            @Override
+            public void removeUpdate(javax.swing.event.DocumentEvent e) {
+                updateBalance();
+            }
+
+            @Override
+            public void changedUpdate(javax.swing.event.DocumentEvent e) {
+                updateBalance();
+            }
+        };
+        paidField.getDocument().addDocumentListener(paymentListener);
+
+        JPanel buttonPanel = new JPanel(new MigLayout("insets 0, fillx", "[grow][]10[]", "[]"));
+        JButton cancelButton = new JButton("Cancel");
+        JButton saveButton = new JButton("Confirm Payment");
+        styleCashierButton(cancelButton, new Color(120, 120, 120), Color.WHITE);
+        styleCashierButton(saveButton, new Color(0, 153, 76), Color.WHITE);
+        buttonPanel.add(new JLabel(), "grow");
+        buttonPanel.add(cancelButton, "h 34!");
+        buttonPanel.add(saveButton, "h 34!");
+        dialog.add(buttonPanel, "span 2, growx");
+
+        cancelButton.addActionListener(e -> dialog.dispose());
+        saveButton.addActionListener(e -> {
+            String enteredCustomer = customerField.getText().trim();
+            if (enteredCustomer.isEmpty()) {
+                JOptionPane.showMessageDialog(dialog, "Customer name is required.", "Validation", JOptionPane.WARNING_MESSAGE);
+                customerField.requestFocusInWindow();
+                return;
+            }
+            float paid = parseFloat(paidField.getText(), -1f);
+            if (paid < 0f) {
+                JOptionPane.showMessageDialog(dialog, "Please enter a valid paid amount.", "Validation", JOptionPane.WARNING_MESSAGE);
+                paidField.requestFocusInWindow();
+                return;
+            }
+            customer_name = enteredCustomer;
+            telephone_number = phoneField.getText().trim();
+            cash = paid;
+            change.setText(String.format(Locale.US, "%.2f", paid - totalDue));
+            dialog.dispose();
+            finishActionPerformed(null);
+        });
+
+        dialog.pack();
+        dialog.setMinimumSize(new Dimension(430, dialog.getHeight()));
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
+    }
+
+    private float parseFloat(String value, float fallback) {
+        if (value == null) {
+            return fallback;
+        }
+        try {
+            return Float.parseFloat(value.trim().replace(",", ""));
+        } catch (NumberFormatException ex) {
+            return fallback;
+        }
     }
 
     private void  Update_table(){
         try{
-    String sql = "select productid,barcode,name,size,price,price2,quantity,category from products";
+    String sql = "SELECT productid AS \"ID\", barcode AS \"Barcode\", name AS \"Name\", size AS \"Size\", "
+            + "GREATEST(COALESCE(price,0), COALESCE(price2,0), COALESCE(price3,0)) AS \"Price\", "
+            + "quantity AS \"Stock\" FROM products ORDER BY name";
     pst = conn.prepareStatement(sql);
     rst = pst.executeQuery();
     products_table.setModel(DbUtils.resultSetToTableModel(rst));
+    configureCashierProductsTable();
     }
     catch(Exception e){
         JOptionPane.showMessageDialog(null, e);
@@ -117,12 +534,14 @@ ResultSet rst;
 private void updateCombo(){
           String sql = "select * from products where barcode = '"+barcode.getText()+"'";
           try{
+          selectcombo.removeAllItems();
+          selectcombo.addItem("Select Prices");
           pst = conn.prepareStatement(sql);
           rst = pst.executeQuery();
           while(rst.next()){
           selectcombo.addItem(rst.getString("price"));
           selectcombo.addItem(rst.getString("price2"));
-//          selectcombo.addItem(rst.getString("price3"));
+          selectcombo.addItem(rst.getString("price3"));
           }
           }catch(Exception e){
           JOptionPane.showMessageDialog(null, "An error occurred!");
@@ -188,37 +607,17 @@ private void updateCombo(){
             e.printStackTrace(); // Or log the error
         }
     }
+    if (rowCount == 0) {
+        total_amount.setText("00.00");
+    }
 
     return total;
 }
  
   public void view_receipt() {
-    try {
-        JasperDesign jdesign = JRXmlLoader.load("src\\reports\\receipt2.jrxml");
-        String query = "select * from solditems where invoice_number = '" + invoice_no.getText() + "'";
-        JRDesignQuery updateQuery = new JRDesignQuery();
-        updateQuery.setText(query);
-        jdesign.setQuery(updateQuery);
-
-        JasperReport jreport = JasperCompileManager.compileReport(jdesign);
-        JasperPrint jprint = JasperFillManager.fillReport(jreport, null, conn);
-
-        // Create a separate JFrame for JasperViewer
-        JFrame frame = new JFrame("KEVINcustoms Receipt Viewer");
-        
-        // Set the default close operation to DISPOSE_ON_CLOSE
-        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-
-        // Create and show the JasperViewer within the JFrame
-        JasperViewer viewer = new JasperViewer(jprint, false);
-        frame.getContentPane().add(viewer.getContentPane());
-        frame.setSize(900, 700); // Set the size according to your preference
-        frame.setLocationRelativeTo(null); // Center the frame on the screen
-        frame.setVisible(true);
-
-    } catch (JRException ex) {
-        Logger.getLogger(sales_admin.class.getName()).log(Level.SEVERE, null, ex);
-    }
+    Map<String, Object> params = new HashMap<>();
+    params.put("invoice_number", invoice_no.getText().trim());
+    JasperReportHelper.showReport(conn, counter.class, "receipt2.jrxml", params, "KEVINcustoms Receipt Viewer");
 }
  public void stkup(){
  //get all table products id and sell quantity
@@ -1018,7 +1417,10 @@ private void updateCombo(){
 
     private void selectcomboActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_selectcomboActionPerformed
         // TODO add your handling code here:
-        price.setText(selectcombo.getSelectedItem().toString());
+        Object selectedPrice = selectcombo.getSelectedItem();
+        if (selectedPrice != null && !"Select Prices".equals(selectedPrice.toString())) {
+            price.setText(selectedPrice.toString());
+        }
     }//GEN-LAST:event_selectcomboActionPerformed
 
     private void itemsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_itemsMouseClicked
@@ -1044,7 +1446,9 @@ private void updateCombo(){
 
     try {
     // Construct the SQL query for searching
-    String sql = "SELECT * FROM products WHERE barcode LIKE ? OR name LIKE ? OR category LIKE ? OR size LIKE ?";
+    String sql = "SELECT productid AS \"ID\", barcode AS \"Barcode\", name AS \"Name\", size AS \"Size\", "
+            + "GREATEST(COALESCE(price,0), COALESCE(price2,0), COALESCE(price3,0)) AS \"Price\", "
+            + "quantity AS \"Stock\" FROM products WHERE barcode LIKE ? OR name LIKE ? OR category LIKE ? OR size LIKE ? ORDER BY name";
     pst = conn.prepareStatement(sql);
     // Set the parameters for the prepared statement
     pst.setString(1, "%" + searchCriteria + "%"); // Using "%" for partial matches
@@ -1054,6 +1458,7 @@ private void updateCombo(){
     rst = pst.executeQuery();       
 
        products_table.setModel(DbUtils.resultSetToTableModel(rst));
+       configureCashierProductsTable();
     
     
 } catch (SQLException e) {
@@ -1112,9 +1517,10 @@ try {
         size.setText(t.getValueAt(i, 3).toString());
         price.setText(t.getValueAt(i, 4).toString());
         quantity.setText("1");
-        String sql = "select quantity from products where productid = '"+id.getText()+"'";
+        String sql = "select quantity, price, price2, price3 from products where productid = ?";
      try {
          pst= conn.prepareStatement(sql);
+         pst.setInt(1, Integer.parseInt(id.getText()));
      } catch (SQLException ex) {
          Logger.getLogger(sales_admin.class.getName()).log(Level.SEVERE, null, ex);
      }
@@ -1127,14 +1533,15 @@ try {
          if(rst.next()){
              String quantity1 = rst.getString("quantity");
              stock_qty.setText(quantity1);
+             selectcombo.removeAllItems();
+             selectcombo.addItem("Select Prices");
+             selectcombo.addItem(rst.getString("price"));
+             selectcombo.addItem(rst.getString("price2"));
+             selectcombo.addItem(rst.getString("price3"));
                 }   
      } catch (SQLException ex) {
          Logger.getLogger(sales_admin.class.getName()).log(Level.SEVERE, null, ex);
      }
-        // Add the prices to the selectcombo
-        selectcombo.removeAllItems();
-        selectcombo.addItem(t.getValueAt(i, 4).toString()); // price
-        selectcombo.addItem(t.getValueAt(i, 5).toString()); // price2
     } catch (Exception e) {
         e.printStackTrace();
     }
@@ -1151,7 +1558,7 @@ int idforuse = Integer.parseInt(id.getText());
     if(selqty > 0){ 
 if(selqty<stqty || selqty == stqty){
     
-      String sql = "select price,price2 from products where productid = ?";
+      String sql = "select price,price2,price3 from products where productid = ?";
     try {
         pst = conn.prepareStatement(sql);
         pst.setInt(1, idforuse);
@@ -1159,7 +1566,8 @@ if(selqty<stqty || selqty == stqty){
         if(rst.next()){
         float price1 = Float.parseFloat(rst.getString("price").trim());
         float price2 = Float.parseFloat(rst.getString("price2").trim());
-        if(priceField <= price1 && priceField >= price2 ){
+        float price3 = Float.parseFloat(rst.getString("price3").trim());
+        if(priceField <= price1 && priceField >= price3 ){
     String itemId = id.getText();
     String itemBarcode = barcode.getText();
     String itemName = name.getText();
@@ -1212,6 +1620,8 @@ JOptionPane.showMessageDialog(null, "The value you have inserted is invalid plea
             JOptionPane.showMessageDialog(this, "The table is already empty.", "Empty Table", JOptionPane.INFORMATION_MESSAGE);
         }
         clear();
+        calculateTotal();
+        change.setText("00.00");
     }//GEN-LAST:event_removeallActionPerformed
 
     private void removeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_removeActionPerformed
@@ -1232,10 +1642,19 @@ JOptionPane.showMessageDialog(null, "The value you have inserted is invalid plea
 
     private void finishActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_finishActionPerformed
         // TODO add your handling code here:
+      if (items.getRowCount() == 0) {
+          JOptionPane.showMessageDialog(this, "Please add items to the cart before confirming payment.", "Empty Cart", JOptionPane.WARNING_MESSAGE);
+          return;
+      }
+      if (customer_name == null || customer_name.trim().isEmpty() || cash == null) {
+          JOptionPane.showMessageDialog(this, "Please record the paid amount and customer details first.", "Payment Required", JOptionPane.WARNING_MESSAGE);
+          showCashierPaymentDialog();
+          return;
+      }
       Float totalamount = Float.valueOf(total_amount.getText());
 String Status = null;
 
-if (cash == 0.0) {
+if (cash == 0.0f) {
     Status = "UnPaid";
 } else if (totalamount > cash) {
     Status = "Partial";
@@ -1297,8 +1716,8 @@ LocalDate currentDate = LocalDate.now();
     customer_name = null;
     telephone_number = null;
     model.setRowCount(0);
-    total_amount.setText("");
-    change.setText("");
+    total_amount.setText("00.00");
+    change.setText("00.00");
 
 } catch (SQLException e) {
 }
@@ -1311,32 +1730,9 @@ LocalDate currentDate = LocalDate.now();
     }//GEN-LAST:event_timeActionPerformed
 
     private void viewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_viewActionPerformed
-       try {
-        JasperDesign jdesign = JRXmlLoader.load("src\\reports\\solditemsrepo.jrxml");
-        String query = "select * from solditems where invoice_number = '" + invoice.getText() + "'";
-        JRDesignQuery updateQuery = new JRDesignQuery();
-        updateQuery.setText(query);
-        jdesign.setQuery(updateQuery);
-
-        JasperReport jreport = JasperCompileManager.compileReport(jdesign);
-        JasperPrint jprint = JasperFillManager.fillReport(jreport, null, conn);
-
-        // Create a separate JFrame for JasperViewer
-        JFrame frame = new JFrame("KEVINcustoms Receipt Viewer");
-        
-        // Set the default close operation to DISPOSE_ON_CLOSE
-        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-
-        // Create and show the JasperViewer within the JFrame
-        JasperViewer viewer = new JasperViewer(jprint, false);
-        frame.getContentPane().add(viewer.getContentPane());
-        frame.setSize(900, 700); // Set the size according to your preference
-        frame.setLocationRelativeTo(null); // Center the frame on the screen
-        frame.setVisible(true);
-
-    } catch (JRException ex) {
-        Logger.getLogger(sales_admin.class.getName()).log(Level.SEVERE, null, ex);
-    }
+        Map<String, Object> params = new HashMap<>();
+        params.put("invoice_number", invoice.getText().trim());
+        JasperReportHelper.showReport(conn, counter.class, "solditemsrepo.jrxml", params, "KEVINcustoms Receipt Viewer");
     }//GEN-LAST:event_viewActionPerformed
 
     private void barcodeKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_barcodeKeyPressed
@@ -1373,42 +1769,11 @@ LocalDate currentDate = LocalDate.now();
 
     private void cashpaidMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_cashpaidMouseClicked
         // TODO add your handling code here:
-        customer_name =JOptionPane.showInputDialog("Customer's Name: ");
-        telephone_number =JOptionPane.showInputDialog("Phone Number: ");
-        cash=Float.valueOf(JOptionPane.showInputDialog("Enter Cash Brought!"));
-        Float total_=Float.valueOf(total_amount.getText());
-        change.setText(String.valueOf(cash-total_));
+        showCashierPaymentDialog();
     }//GEN-LAST:event_cashpaidMouseClicked
 
     private void view_allActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_view_allActionPerformed
-        // TODO add your handling code here:
-        
-         try {
-        JasperDesign jdesign = JRXmlLoader.load("src\\reports\\solditemsrepo.jrxml");
-        String query = "select * from solditems";
-        JRDesignQuery updateQuery = new JRDesignQuery();
-        updateQuery.setText(query);
-        jdesign.setQuery(updateQuery);
-
-        JasperReport jreport = JasperCompileManager.compileReport(jdesign);
-        JasperPrint jprint = JasperFillManager.fillReport(jreport, null, conn);
-
-        // Create a separate JFrame for JasperViewer
-        JFrame frame = new JFrame("KEVINcustoms Report Viewer");
-        
-        // Set the default close operation to DISPOSE_ON_CLOSE
-        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-
-        // Create and show the JasperViewer within the JFrame
-        JasperViewer viewer = new JasperViewer(jprint, false);
-        frame.getContentPane().add(viewer.getContentPane());
-        frame.setSize(900, 700); // Set the size according to your preference
-        frame.setLocationRelativeTo(null); // Center the frame on the screen
-        frame.setVisible(true);
-
-    } catch (JRException ex) {
-        Logger.getLogger(sales_admin.class.getName()).log(Level.SEVERE, null, ex);
-    }
+        JasperReportHelper.showReport(conn, counter.class, "solditemsrepo.jrxml", "KEVINcustoms Report Viewer");
     }//GEN-LAST:event_view_allActionPerformed
 
     private void formCaretPositionChanged(java.awt.event.InputMethodEvent evt) {//GEN-FIRST:event_formCaretPositionChanged
@@ -1526,3 +1891,7 @@ login.setVisible(true);
     private javax.swing.JButton view_all;
     // End of variables declaration//GEN-END:variables
 }
+
+
+
+

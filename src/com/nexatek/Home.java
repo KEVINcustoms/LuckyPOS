@@ -37,6 +37,7 @@ public class Home extends javax.swing.JFrame {
         setUndecorated(true);
         
         initComponents();
+        setupResponsiveShellLayout();
         
         // Set application icon for taskbar
         try {
@@ -60,6 +61,144 @@ public class Home extends javax.swing.JFrame {
         setExtendedState(Home.MAXIMIZED_BOTH);
         setLocationRelativeTo(null);
         setVisible(true);
+    }
+
+    private void setupResponsiveShellLayout() {
+        panel_load.setLayout(new java.awt.BorderLayout());
+        panel_load.setBorder(javax.swing.BorderFactory.createEmptyBorder());
+        panel_load.setMinimumSize(new java.awt.Dimension(0, 0));
+
+        jPanel1.removeAll();
+        jPanel1.setMinimumSize(new java.awt.Dimension(205, 0));
+        jPanel1.setPreferredSize(new java.awt.Dimension(205, 0));
+        jPanel1.setMaximumSize(new java.awt.Dimension(205, Integer.MAX_VALUE));
+        jPanel1.setLayout(new net.miginfocom.swing.MigLayout(
+                "insets 6, gapy 5, fillx, wrap 1",
+                "[grow,fill]",
+                ""));
+        jPanel1.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+                javax.swing.BorderFactory.createLineBorder(new java.awt.Color(218, 224, 232)),
+                javax.swing.BorderFactory.createEmptyBorder(5, 5, 5, 5)));
+        jPanel1.setBackground(new java.awt.Color(245, 247, 250));
+
+        counter.setOpaque(true);
+        counter.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        counter.setBackground(new java.awt.Color(25, 42, 65));
+        counter.setForeground(java.awt.Color.WHITE);
+        counter.setBorder(javax.swing.BorderFactory.createEmptyBorder(8, 8, 8, 8));
+
+        if (dashboardButton == null) {
+            dashboardButton = new javax.swing.JToggleButton("Dashboard");
+            dashboardButton.setBackground(new java.awt.Color(41, 128, 185));
+            try {
+                dashboardButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/nexatek/images/img/reports.png")));
+            } catch (Exception ignored) {
+            }
+            home_bnt_grp.add(dashboardButton);
+            dashboardButton.addActionListener(e -> showDashboard());
+        }
+        if (subscriptionButton == null) {
+            subscriptionButton = new javax.swing.JToggleButton("Subscription");
+            subscriptionButton.setBackground(new java.awt.Color(117, 76, 184));
+            try {
+                subscriptionButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/nexatek/images/img/icons8-samsung-pay-56.png")));
+            } catch (Exception ignored) {
+            }
+            home_bnt_grp.add(subscriptionButton);
+            subscriptionButton.addActionListener(e -> showSubscriptions());
+        }
+        if (quotationsButton == null) {
+            quotationsButton = new javax.swing.JToggleButton("Quotations");
+            quotationsButton.setBackground(new java.awt.Color(0, 128, 64));
+            try {
+                quotationsButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/nexatek/images/img/invo.png")));
+            } catch (Exception ignored) {
+            }
+            home_bnt_grp.add(quotationsButton);
+            quotationsButton.addActionListener(e -> showQuotations());
+        }
+
+        javax.swing.AbstractButton[] navButtons = {
+            dashboardButton, jToggleButton3, jToggleButton1, jToggleButton2, jToggleButton4, jToggleButton5,
+            jToggleButton6, jToggleButton7, jToggleButton8, jToggleButton10, jToggleButton11,
+            jToggleButton12, quotationsButton, subscriptionButton, poweroff, jToggleButton9
+        };
+        for (javax.swing.AbstractButton button : navButtons) {
+            styleSidebarButton(button);
+        }
+
+        jPanel1.add(counter, "h 32!");
+        jPanel1.add(dashboardButton, "h 40!");
+        jPanel1.add(jToggleButton3, "h 40!");
+        jPanel1.add(jToggleButton1, "h 40!");
+        jPanel1.add(jToggleButton2, "h 40!");
+        jPanel1.add(jToggleButton4, "h 40!");
+        jPanel1.add(jToggleButton5, "h 40!");
+        jPanel1.add(jToggleButton6, "h 40!");
+        jPanel1.add(jToggleButton7, "h 40!");
+        jPanel1.add(jToggleButton8, "h 40!");
+        jPanel1.add(jToggleButton10, "h 40!");
+        jPanel1.add(jToggleButton11, "h 40!");
+        jPanel1.add(jToggleButton12, "h 40!");
+        jPanel1.add(quotationsButton, "h 40!");
+        jPanel1.add(subscriptionButton, "h 40!");
+        jPanel1.add(new javax.swing.JLabel(), "pushy");
+        jPanel1.add(poweroff, "h 40!, gaptop 8");
+        jPanel1.add(jToggleButton9, "h 40!");
+
+        javax.swing.JPanel bodyPanel = new javax.swing.JPanel(new net.miginfocom.swing.MigLayout(
+                "insets 0, fill",
+                "[205!,fill]6[0,grow,fill]",
+                "[grow,fill]"));
+        bodyPanel.setMinimumSize(new java.awt.Dimension(0, 0));
+        bodyPanel.add(jPanel1, "grow");
+        bodyPanel.add(panel_load, "grow, push");
+
+        getContentPane().removeAll();
+        getContentPane().setLayout(new net.miginfocom.swing.MigLayout(
+                "insets 6, fill, wrap 1",
+                "[grow,fill]",
+                "[45!][grow,fill]"));
+        getContentPane().add(jPanel3, "growx");
+        getContentPane().add(bodyPanel, "grow");
+        getContentPane().revalidate();
+        getContentPane().repaint();
+    }
+
+    private void styleSidebarButton(javax.swing.AbstractButton button) {
+        button.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 12));
+        button.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        button.setIconTextGap(10);
+        button.setFocusPainted(false);
+        button.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+                new javax.swing.border.LineBorder(new java.awt.Color(210, 218, 228), 1, true),
+                javax.swing.BorderFactory.createEmptyBorder(5, 10, 5, 10)));
+        button.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        button.putClientProperty(com.formdev.flatlaf.FlatClientProperties.STYLE, ""
+                + "arc:8;"
+                + "margin:5,10,5,10;"
+                + "selectedBackground:#192A41;"
+                + "selectedForeground:#FFFFFF;");
+        if (button.getIcon() instanceof javax.swing.ImageIcon) {
+            javax.swing.ImageIcon icon = (javax.swing.ImageIcon) button.getIcon();
+            java.awt.Image image = icon.getImage().getScaledInstance(24, 24, java.awt.Image.SCALE_SMOOTH);
+            button.setIcon(new javax.swing.ImageIcon(image));
+        }
+    }
+
+    private void showDashboard() {
+        DashboardContainer dashboard = new DashboardContainer();
+        jpload.jPanelLoader(panel_load, dashboard);
+    }
+
+    private void showSubscriptions() {
+        SubscriptionPanel subscriptions = new SubscriptionPanel();
+        jpload.jPanelLoader(panel_load, subscriptions);
+    }
+
+    private void showQuotations() {
+        QuotationPanel quotations = new QuotationPanel(counter.getText());
+        jpload.jPanelLoader(panel_load, quotations);
     }
     
     private void setupCustomTitleBar() {
@@ -923,4 +1062,7 @@ public class Home extends javax.swing.JFrame {
     private javax.swing.JButton btnHelp;
     private javax.swing.JButton btnAbout;
     private javax.swing.JButton btnBackup;
+    private javax.swing.JToggleButton dashboardButton;
+    private javax.swing.JToggleButton subscriptionButton;
+    private javax.swing.JToggleButton quotationsButton;
 }

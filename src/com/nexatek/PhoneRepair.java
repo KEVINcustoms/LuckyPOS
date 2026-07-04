@@ -21,7 +21,6 @@ import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 import net.proteanit.sql.DbUtils;
 import net.sf.jasperreports.engine.*;
-import net.sf.jasperreports.engine.design.JRDesignQuery;
 import net.sf.jasperreports.engine.design.JasperDesign;
 import net.sf.jasperreports.engine.xml.JRXmlLoader;
 import net.sf.jasperreports.view.JasperViewer;
@@ -600,10 +599,11 @@ public class PhoneRepair extends javax.swing.JPanel {
             loadRepairs();
             
             // Auto-print receipt
+            final String finalReceiptNumber = receiptNumber;
             SwingUtilities.invokeLater(() -> {
                 try {
-                    Thread.sleep(500); // Brief delay
-                    printReceiptByNumber(receiptNumber);
+                    Thread.sleep(500);
+                    printReceiptByNumber(finalReceiptNumber);
                 } catch (InterruptedException ex) {
                     Logger.getLogger(PhoneRepair.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -617,58 +617,215 @@ public class PhoneRepair extends javax.swing.JPanel {
     
     private void printReceipt() {
         String receiptNumber = getSelectedReceiptNumber();
-        if (receiptNumber == null) {
+        if (receiptNumber == null || receiptNumber.trim().isEmpty()) {
             JOptionPane.showMessageDialog(this, "Please select a repair to print receipt", "Warning", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        
         printReceiptByNumber(receiptNumber);
     }
     
-    private String getSelectedReceiptNumber() {
+    private int getSelectedModelRow() {
         int viewRow = repairsTable.getSelectedRow();
         if (viewRow < 0) {
-            return null;
+            return -1;
         }
         int modelRow = repairsTable.convertRowIndexToModel(viewRow);
         DefaultTableModel model = (DefaultTableModel) repairsTable.getModel();
         if (modelRow < 0 || modelRow >= model.getRowCount()) {
+            return -1;
+        }
+        return modelRow;
+    }
+    
+    private String getSelectedReceiptNumber() {
+        int modelRow = getSelectedModelRow();
+        if (modelRow < 0) {
             return null;
         }
+        DefaultTableModel model = (DefaultTableModel) repairsTable.getModel();
         return String.valueOf(model.getValueAt(modelRow, 0));
     }
     
-    private void printReceiptByNumber(String receiptNumber) {
-        try {
-            if (conn == null || conn.isClosed()) {
-                showError("Database connection is not available.");
-                return;
-            }
-            
-            java.io.File reportFile = new java.io.File("src/reports/phone_repair_receipt.jrxml");
-            if (!reportFile.exists()) {
-                showError("Receipt report file not found.");
-                return;
-            }
-            
-            JasperDesign jdesign = JRXmlLoader.load(reportFile.getAbsolutePath());
-            String query = "SELECT id, receipt_number, customer_name, customer_phone, phone_brand, phone_model, " +
-                           "phone_color, repair_type, agreed_amount, amount_paid, balance_due, payment_status, " +
-                           "date_received, status FROM phone_repairs WHERE receipt_number = '" + receiptNumber + "'";
-            JRDesignQuery updateQuery = new JRDesignQuery();
-            updateQuery.setText(query);
-            jdesign.setQuery(updateQuery);
-            
-            JasperReport jreport = JasperCompileManager.compileReport(jdesign);
-            JasperPrint jprint = JasperFillManager.fillReport(jreport, null, conn);
-            
-            JasperViewer viewer = new JasperViewer(jprint, false);
-            viewer.setVisible(true);
-            
-        } catch (Exception ex) {
-            Logger.getLogger(PhoneRepair.class.getName()).log(Level.SEVERE, null, ex);
-            showError("Error generating receipt: " + ex.getMessage());
+private void printReceiptByNumber(String receiptNumber) {
+
+    try {
+
+        if (conn == null || conn.isClosed()) {
+            showError("Database connection is not available.");
+            return;
         }
+
+        // Validate receipt number
+        if (receiptNumber == null || receiptNumber.trim().isEmpty()) {
+            showError("Invalid receipt number.");
+            return;
+        }
+
+        // Locate JRXML report
+        java.io.File reportFile = resolveReportFile();
+
+        if (reportFile == null) {
+
+            showError(
+                "Receipt report file not found.\n\n" +
+                "Expected:\n" +
+                "phone_repair_receipt.jrxml"
+            );
+
+            return;
+        }
+
+        System.out.println("[Receipt] Loading template from: "
+                + reportFile.getAbsolutePath());
+
+        // Load JRXML
+        JasperDesign jdesign = JRXmlLoader.load(reportFile);
+
+        // Compile report using the report template's own parameterized SQL.
+        JasperReport jreport =
+                JasperCompileManager.compileReport(jdesign);
+
+        java.util.Map<String, Object> params = new java.util.HashMap<>();
+        params.put("receipt_number", receiptNumber.trim());
+
+        System.out.println("[Receipt] Filling report for receipt: " + receiptNumber.trim());
+
+        JasperPrint jprint =
+                JasperFillManager.fillReport(
+                        jreport,
+                        params,
+                        conn
+                );
+
+        System.out.println("[Receipt] Pages: "
+                + jprint.getPages().size());
+
+        // Ensure data exists
+        if (jprint.getPages().isEmpty()) {
+            showError(
+                    "Receipt generated but contains no data.\n\n" +
+                    "Receipt #: " + receiptNumber
+            );
+            return;
+        }
+
+        // Open viewer
+        JasperViewer viewer =
+                new JasperViewer(jprint, false);
+        viewer.setVisible(true);
+
+    } catch (Exception ex) {
+
+        ex.printStackTrace();
+
+        Throwable root = getRootCause(ex);
+
+        Logger.getLogger(PhoneRepair.class.getName())
+                .log(Level.SEVERE, null, ex);
+
+        showError(
+                "Error generating receipt.\n\n" +
+                "Cause: " + root.getMessage()
+        );
+    }
+}
+
+    /**
+     * Tries to find the .jrxml in several locations and returns the first
+     * {@link java.io.File} that exists, or null if none are found.
+     */
+    private java.io.File resolveReportFile() {
+        System.out.println("[Receipt] Working directory: " + new java.io.File(".").getAbsolutePath());
+
+        // 1. Classpath-based resolution (works when resources are copied into build/classes)
+        java.net.URL resource = getClass().getResource("/reports/phone_repair_receipt.jrxml");
+        if (resource != null) {
+            try {
+                java.io.File resourceFile = new java.io.File(resource.toURI());
+                if (resourceFile.exists()) {
+                    System.out.println("[Receipt] Loaded from classpath: /reports/phone_repair_receipt.jrxml");
+                    return resourceFile;
+                }
+            } catch (Exception ignore) {
+                // Ignore and continue to filesystem search.
+            }
+        }
+
+        // 2. Root classpath fallback
+        resource = getClass().getResource("/phone_repair_receipt.jrxml");
+        if (resource != null) {
+            try {
+                java.io.File resourceFile = new java.io.File(resource.toURI());
+                if (resourceFile.exists()) {
+                    System.out.println("[Receipt] Loaded from classpath root: /phone_repair_receipt.jrxml");
+                    return resourceFile;
+                }
+            } catch (Exception ignore) {
+                // Ignore and continue to filesystem search.
+            }
+        }
+
+        // 3. Search from current directory and its parents (handles IDE/launcher differences)
+        java.io.File current = new java.io.File(".").getAbsoluteFile();
+        java.io.File[] searchRoots = new java.io.File[] {
+            current,
+            current.getParentFile()
+        };
+
+        for (java.io.File root : searchRoots) {
+            if (root == null) {
+                continue;
+            }
+            java.io.File candidate = new java.io.File(root, "src/reports/phone_repair_receipt.jrxml");
+            if (candidate.exists()) {
+                System.out.println("[Receipt] Loaded from file: " + candidate.getAbsolutePath());
+                return candidate;
+            }
+
+            candidate = new java.io.File(root, "reports/phone_repair_receipt.jrxml");
+            if (candidate.exists()) {
+                System.out.println("[Receipt] Loaded from file: " + candidate.getAbsolutePath());
+                return candidate;
+            }
+
+            candidate = new java.io.File(root, "build/classes/reports/phone_repair_receipt.jrxml");
+            if (candidate.exists()) {
+                System.out.println("[Receipt] Loaded from file: " + candidate.getAbsolutePath());
+                return candidate;
+            }
+        }
+
+        // 4. Last resort: search upwards from the current directory until the filesystem root.
+        java.io.File walk = current;
+        while (walk != null) {
+            java.io.File candidate = new java.io.File(walk, "src/reports/phone_repair_receipt.jrxml");
+            if (candidate.exists()) {
+                System.out.println("[Receipt] Loaded from file: " + candidate.getAbsolutePath());
+                return candidate;
+            }
+            candidate = new java.io.File(walk, "reports/phone_repair_receipt.jrxml");
+            if (candidate.exists()) {
+                System.out.println("[Receipt] Loaded from file: " + candidate.getAbsolutePath());
+                return candidate;
+            }
+            candidate = new java.io.File(walk, "build/classes/reports/phone_repair_receipt.jrxml");
+            if (candidate.exists()) {
+                System.out.println("[Receipt] Loaded from file: " + candidate.getAbsolutePath());
+                return candidate;
+            }
+            walk = walk.getParentFile();
+        }
+
+        return null;
+    }
+
+    /** Walks the cause chain to find the real root exception. */
+    private Throwable getRootCause(Throwable t) {
+        Throwable cause = t;
+        while (cause.getCause() != null) {
+            cause = cause.getCause();
+        }
+        return cause;
     }
     
     private void markCompleted() {
@@ -744,18 +901,18 @@ public class PhoneRepair extends javax.swing.JPanel {
         String phone = (String) model.getValueAt(modelRow, 2);
         String device = (String) model.getValueAt(modelRow, 3);
         String repairTypeValue = (String) model.getValueAt(modelRow, 4);
-        double agreedAmount = Double.parseDouble(((String) model.getValueAt(modelRow, 5)).replace(",", ""));
+        double agreedAmt = Double.parseDouble(((String) model.getValueAt(modelRow, 5)).replace(",", ""));
         double amountPaid = Double.parseDouble(((String) model.getValueAt(modelRow, 6)).replace(",", ""));
         double balanceDue = Double.parseDouble(((String) model.getValueAt(modelRow, 7)).replace(",", ""));
         String paymentStatus = (String) model.getValueAt(modelRow, 8);
         String serviceStatus = (String) model.getValueAt(modelRow, 10);
         
         showPaymentDialog(receiptNumber, customer, phone, device, repairTypeValue,
-                agreedAmount, amountPaid, balanceDue, paymentStatus, serviceStatus);
+                agreedAmt, amountPaid, balanceDue, paymentStatus, serviceStatus);
     }
     
     private void showPaymentDialog(String receiptNumber, String customer, String phone, String device,
-                                   String repairTypeValue, double agreedAmount, double amountPaid,
+                                   String repairTypeValue, double agreedAmt, double amountPaid,
                                    double balanceDue, String paymentStatus, String serviceStatus) {
         JDialog dialog = new JDialog();
         dialog.setTitle("Record Payment");
@@ -783,23 +940,23 @@ public class PhoneRepair extends javax.swing.JPanel {
             "New Payment:"
         };
         
-        JTextField receiptField = new JTextField(receiptNumber);
-        JTextField customerField = new JTextField(customer);
-        JTextField phoneField = new JTextField(phone);
-        JTextField deviceField = new JTextField(device);
-        JTextField typeField = new JTextField(repairTypeValue);
-        JTextField agreedField = new JTextField(String.format("%,.0f", agreedAmount));
-        JTextField paidField = new JTextField(String.format("%,.0f", amountPaid));
-        JTextField balanceField = new JTextField(String.format("%,.0f", balanceDue));
-        JTextField statusField = new JTextField(paymentStatus);
-        JSpinner paymentInput = new JSpinner(new SpinnerNumberModel(
-                Math.max(0, (int) balanceDue), 0, (int) Math.max(agreedAmount, balanceDue), 1000));
+        JTextField receiptField    = new JTextField(receiptNumber);
+        JTextField customerField   = new JTextField(customer);
+        JTextField phoneField      = new JTextField(phone);
+        JTextField deviceField     = new JTextField(device);
+        JTextField typeField       = new JTextField(repairTypeValue);
+        JTextField agreedField     = new JTextField(String.format("%,.0f", agreedAmt));
+        JTextField paidField       = new JTextField(String.format("%,.0f", amountPaid));
+        JTextField balanceField    = new JTextField(String.format("%,.0f", balanceDue));
+        JTextField statusField     = new JTextField(paymentStatus);
+        JSpinner paymentInput      = new JSpinner(new SpinnerNumberModel(
+                Math.max(0, (int) balanceDue), 0, (int) Math.max(agreedAmt, balanceDue), 1000));
         
         JTextField[] fields = {receiptField, customerField, phoneField, deviceField, typeField,
             agreedField, paidField, balanceField, statusField};
-        for (int i = 0; i < fields.length; i++) {
-            fields[i].setEditable(false);
-            fields[i].setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        for (JTextField f : fields) {
+            f.setEditable(false);
+            f.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         }
         paymentInput.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         
@@ -813,27 +970,17 @@ public class PhoneRepair extends javax.swing.JPanel {
             dialog.add(label, dgbc);
             
             JComponent comp;
-            if (i == labels.length - 1) {
-                comp = paymentInput;
-            } else if (i == 0) {
-                comp = receiptField;
-            } else if (i == 1) {
-                comp = customerField;
-            } else if (i == 2) {
-                comp = phoneField;
-            } else if (i == 3) {
-                comp = deviceField;
-            } else if (i == 4) {
-                comp = typeField;
-            } else if (i == 5) {
-                comp = agreedField;
-            } else if (i == 6) {
-                comp = paidField;
-            } else if (i == 7) {
-                comp = balanceField;
-            } else {
-                comp = statusField;
-            }
+            if      (i == 0) comp = receiptField;
+            else if (i == 1) comp = customerField;
+            else if (i == 2) comp = phoneField;
+            else if (i == 3) comp = deviceField;
+            else if (i == 4) comp = typeField;
+            else if (i == 5) comp = agreedField;
+            else if (i == 6) comp = paidField;
+            else if (i == 7) comp = balanceField;
+            else if (i == 8) comp = statusField;
+            else             comp = paymentInput;
+
             dgbc.gridx = 1;
             dialog.add(comp, dgbc);
             row++;
@@ -841,23 +988,23 @@ public class PhoneRepair extends javax.swing.JPanel {
         
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
         buttonPanel.setOpaque(false);
-        JButton saveButton = new JButton("Save Payment");
-        saveButton.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        saveButton.setForeground(Color.WHITE);
-        saveButton.setBackground(SUCCESS_COLOR);
-        JButton cancelButton = new JButton("Cancel");
-        cancelButton.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        cancelButton.setForeground(Color.WHITE);
-        cancelButton.setBackground(TEXT_SECONDARY);
-        buttonPanel.add(saveButton);
-        buttonPanel.add(cancelButton);
+        JButton saveBtn = new JButton("Save Payment");
+        saveBtn.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        saveBtn.setForeground(Color.WHITE);
+        saveBtn.setBackground(SUCCESS_COLOR);
+        JButton cancelBtn = new JButton("Cancel");
+        cancelBtn.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        cancelBtn.setForeground(Color.WHITE);
+        cancelBtn.setBackground(TEXT_SECONDARY);
+        buttonPanel.add(saveBtn);
+        buttonPanel.add(cancelBtn);
         
         dgbc.gridx = 0;
         dgbc.gridy = row;
         dgbc.gridwidth = 2;
         dialog.add(buttonPanel, dgbc);
         
-        saveButton.addActionListener(e -> {
+        saveBtn.addActionListener(e -> {
             double paymentAmount = ((Number) paymentInput.getValue()).doubleValue();
             if (paymentAmount <= 0) {
                 showWarning("Payment amount must be greater than 0.");
@@ -870,7 +1017,7 @@ public class PhoneRepair extends javax.swing.JPanel {
             dialog.dispose();
             updatePaymentRecord(receiptNumber, paymentAmount, serviceStatus);
         });
-        cancelButton.addActionListener(e -> dialog.dispose());
+        cancelBtn.addActionListener(e -> dialog.dispose());
         
         dialog.pack();
         dialog.setLocationRelativeTo(this);
@@ -888,17 +1035,17 @@ public class PhoneRepair extends javax.swing.JPanel {
                 return;
             }
             
-            double agreedAmount = rst.getDouble("agreed_amount");
-            double amountPaid = rst.getDouble("amount_paid");
-            double balanceDue = rst.getDouble("balance_due");
+            double agreedAmt   = rst.getDouble("agreed_amount");
+            double amountPaid  = rst.getDouble("amount_paid");
+            double balanceDue  = rst.getDouble("balance_due");
             
             if (paymentAmount > balanceDue) {
                 showWarning("Payment amount cannot exceed the remaining balance.");
                 return;
             }
             
-            double newAmountPaid = amountPaid + paymentAmount;
-            double newBalanceDue = Math.max(0, agreedAmount - newAmountPaid);
+            double newAmountPaid  = amountPaid + paymentAmount;
+            double newBalanceDue  = Math.max(0, agreedAmt - newAmountPaid);
             String newPaymentStatus = newBalanceDue <= 0 ? "Paid" : (newAmountPaid > 0 ? "Partial" : "Not Paid");
             
             if (newBalanceDue <= 0) {
@@ -944,16 +1091,13 @@ public class PhoneRepair extends javax.swing.JPanel {
         if (confirm != JOptionPane.YES_OPTION) {
             return;
         }
-        String deleteQuery = "DELETE FROM phone_repairs WHERE receipt_number = ?";
         
         try {
-            pst = conn.prepareStatement(deleteQuery);
+            pst = conn.prepareStatement("DELETE FROM phone_repairs WHERE receipt_number = ?");
             pst.setString(1, receiptNumber);
             pst.executeUpdate();
-            
             JOptionPane.showMessageDialog(this, "Repair deleted successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
             loadRepairs();
-            
         } catch (SQLException ex) {
             Logger.getLogger(PhoneRepair.class.getName()).log(Level.SEVERE, null, ex);
             showError("Error deleting repair: " + ex.getMessage());
@@ -1062,14 +1206,10 @@ public class PhoneRepair extends javax.swing.JPanel {
     
     private Color getStatusColor(String status) {
         switch (status) {
-            case "Completed":
-                return new Color(232, 245, 233);
-            case "Pending":
-                return new Color(255, 248, 225);
-            case "Unpaid":
-                return new Color(255, 235, 238);
-            default:
-                return Color.WHITE;
+            case "Completed": return new Color(232, 245, 233);
+            case "Pending":   return new Color(255, 248, 225);
+            case "Unpaid":    return new Color(255, 235, 238);
+            default:          return Color.WHITE;
         }
     }
     
@@ -1109,28 +1249,27 @@ public class PhoneRepair extends javax.swing.JPanel {
                 setText("");
                 setEnabled(false);
             }
-            if (isSelected) {
-                setForeground(table.getSelectionForeground());
-                setBackground(table.getSelectionBackground());
-            } else {
-                setForeground(table.getForeground());
-                setBackground(table.getBackground());
-            }
+            setForeground(isSelected ? table.getSelectionForeground() : table.getForeground());
+            setBackground(isSelected ? table.getSelectionBackground() : table.getBackground());
             return this;
         }
     }
     
     private class ButtonEditor extends DefaultCellEditor {
         private final JButton button = new JButton();
-        private String receiptNumber;
+        private int modelRow = -1;
         
         public ButtonEditor(JCheckBox checkBox) {
             super(checkBox);
             button.setOpaque(true);
             button.setFont(new Font("Segoe UI", Font.BOLD, 11));
             button.addActionListener(e -> {
-                if (receiptNumber != null) {
-                    printReceiptByNumber(receiptNumber);
+                if (modelRow >= 0) {
+                    DefaultTableModel model = (DefaultTableModel) repairsTable.getModel();
+                    if (modelRow >= 0 && modelRow < model.getRowCount()) {
+                        String receiptNumber = String.valueOf(model.getValueAt(modelRow, 0));
+                        printReceiptByNumber(receiptNumber);
+                    }
                 }
                 fireEditingStopped();
             });
@@ -1139,9 +1278,10 @@ public class PhoneRepair extends javax.swing.JPanel {
         @Override
         public Component getTableCellEditorComponent(JTable table, Object value,
                 boolean isSelected, int row, int column) {
-            receiptNumber = (String) table.getValueAt(row, 0);
-            String paymentStatus = (String) table.getValueAt(row, 8);
-            String displayStatus = (String) table.getValueAt(row, 10);
+            int viewRow = row;
+            modelRow = table.convertRowIndexToModel(viewRow);
+            String paymentStatus = String.valueOf(table.getValueAt(viewRow, 8));
+            String displayStatus = String.valueOf(table.getValueAt(viewRow, 10));
             if ("Paid".equalsIgnoreCase(paymentStatus) || "Completed".equalsIgnoreCase(displayStatus)) {
                 button.setText("Print Receipt");
                 button.setEnabled(true);

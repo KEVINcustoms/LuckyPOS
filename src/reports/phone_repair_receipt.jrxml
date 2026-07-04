@@ -1,335 +1,178 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
-              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
-              name="PhoneRepairReceipt" pageWidth="226" pageHeight="576" columnWidth="226"
-              leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0"
-              uuid="906397dd-727c-4a13-a692-750f0adebfdc">
-    <property name="ireport.zoom" value="1.0"/>
-    <property name="ireport.x" value="0"/>
-    <property name="ireport.y" value="0"/>
-    <queryString>
-        <![CDATA[SELECT id, receipt_number, customer_name, customer_phone, phone_brand, phone_model, phone_color, repair_type, agreed_amount, amount_paid, balance_due, payment_status, date_received, status FROM phone_repairs]]>
-    </queryString>
-    <field name="id" class="java.lang.Integer"/>
-    <field name="receipt_number" class="java.lang.String"/>
-    <field name="customer_name" class="java.lang.String"/>
-    <field name="customer_phone" class="java.lang.String"/>
-    <field name="phone_brand" class="java.lang.String"/>
-    <field name="phone_model" class="java.lang.String"/>
-    <field name="phone_color" class="java.lang.String"/>
-    <field name="repair_type" class="java.lang.String"/>
-    <field name="agreed_amount" class="java.lang.Double"/>
-    <field name="amount_paid" class="java.lang.Double"/>
-    <field name="balance_due" class="java.lang.Double"/>
-    <field name="payment_status" class="java.lang.String"/>
-    <field name="date_received" class="java.sql.Timestamp"/>
-    <field name="status" class="java.lang.String"/>
-    <background>
-        <band splitType="Stretch"/>
-    </background>
-    <title>
-        <band height="85" splitType="Stretch">
-            <staticText>
-                <reportElement x="10" y="5" width="206" height="18" uuid="a1"/>
-                <textElement textAlignment="Center">
-                    <font size="14" isBold="true"/>
-                </textElement>
-                <text><![CDATA[KEBZ PHONE SERVICE CENTRE]]></text>
-            </staticText>
-            <staticText>
-                <reportElement x="10" y="23" width="206" height="10" uuid="a2"/>
-                <textElement textAlignment="Center">
-                    <font size="8"/>
-                </textElement>
-                <text><![CDATA[Professional Device Repair Services]]></text>
-            </staticText>
-            <staticText>
-                <reportElement x="10" y="33" width="206" height="9" uuid="a3"/>
-                <textElement textAlignment="Center">
-                    <font size="8"/>
-                </textElement>
-                <text><![CDATA[Kiteezi, Kampala]]></text>
-            </staticText>
-            <staticText>
-                <reportElement x="10" y="42" width="206" height="9" uuid="a4"/>
-                <textElement textAlignment="Center">
-                    <font size="8"/>
-                </textElement>
-                <text><![CDATA[+256 741419436 | Email: service@kebz.com]]></text>
-            </staticText>
-            <line>
-                <reportElement x="5" y="53" width="216" height="1" uuid="a5"/>
-            </line>
-            <staticText>
-                <reportElement x="65" y="58" width="96" height="14" uuid="a6"/>
-                <textElement textAlignment="Center">
-                    <font size="11" isBold="true"/>
-                </textElement>
-                <text><![CDATA[REPAIR RECEIPT]]></text>
-            </staticText>
-            <line>
-                <reportElement x="5" y="73" width="216" height="1" uuid="a7"/>
-            </line>
-        </band>
-    </title>
-    <pageHeader>
-        <band splitType="Stretch"/>
-    </pageHeader>
-    <detail>
-        <band height="220" splitType="Stretch">
-            <staticText>
-                <reportElement x="10" y="5" width="70" height="10" uuid="b1"/>
-                <textElement>
-                    <font size="8" isBold="true"/>
-                </textElement>
-                <text><![CDATA[Receipt #]]></text>
-            </staticText>
-            <textField>
-                <reportElement x="85" y="5" width="131" height="10" uuid="b2"/>
-                <textElement>
-                    <font size="9" isBold="true"/>
-                </textElement>
-                <textFieldExpression><![CDATA[$F{receipt_number}]]></textFieldExpression>
-            </textField>
-            <staticText>
-                <reportElement x="10" y="18" width="206" height="8" uuid="b3"/>
-                <textElement>
-                    <font size="8" isBold="true"/>
-                </textElement>
-                <text><![CDATA[CUSTOMER INFORMATION]]></text>
-            </staticText>
-            <staticText>
-                <reportElement x="10" y="28" width="45" height="9" uuid="b4"/>
-                <textElement>
-                    <font size="8"/>
-                </textElement>
-                <text><![CDATA[Name:]]></text>
-            </staticText>
-            <textField>
-                <reportElement x="60" y="28" width="156" height="9" uuid="b5"/>
-                <textElement>
-                    <font size="8"/>
-                </textElement>
-                <textFieldExpression><![CDATA[$F{customer_name}]]></textFieldExpression>
-            </textField>
-            <staticText>
-                <reportElement x="10" y="38" width="45" height="9" uuid="b6"/>
-                <textElement>
-                    <font size="8"/>
-                </textElement>
-                <text><![CDATA[Phone:]]></text>
-            </staticText>
-            <textField>
-                <reportElement x="60" y="38" width="156" height="9" uuid="b7"/>
-                <textElement>
-                    <font size="8"/>
-                </textElement>
-                <textFieldExpression><![CDATA[$F{customer_phone}]]></textFieldExpression>
-            </textField>
-            <staticText>
-                <reportElement x="10" y="50" width="206" height="8" uuid="b8"/>
-                <textElement>
-                    <font size="8" isBold="true"/>
-                </textElement>
-                <text><![CDATA[DEVICE INFORMATION]]></text>
-            </staticText>
-            <staticText>
-                <reportElement x="10" y="60" width="45" height="9" uuid="b9"/>
-                <textElement>
-                    <font size="8"/>
-                </textElement>
-                <text><![CDATA[Brand:]]></text>
-            </staticText>
-            <textField>
-                <reportElement x="60" y="60" width="156" height="9" uuid="b10"/>
-                <textElement>
-                    <font size="8"/>
-                </textElement>
-                <textFieldExpression><![CDATA[$F{phone_brand}]]></textFieldExpression>
-            </textField>
-            <staticText>
-                <reportElement x="10" y="70" width="45" height="9" uuid="b11"/>
-                <textElement>
-                    <font size="8"/>
-                </textElement>
-                <text><![CDATA[Model:]]></text>
-            </staticText>
-            <textField>
-                <reportElement x="60" y="70" width="156" height="9" uuid="b12"/>
-                <textElement>
-                    <font size="8"/>
-                </textElement>
-                <textFieldExpression><![CDATA[$F{phone_model}]]></textFieldExpression>
-            </textField>
-            <staticText>
-                <reportElement x="10" y="80" width="45" height="9" uuid="b13"/>
-                <textElement>
-                    <font size="8"/>
-                </textElement>
-                <text><![CDATA[Color:]]></text>
-            </staticText>
-            <textField>
-                <reportElement x="60" y="80" width="156" height="9" uuid="b14"/>
-                <textElement>
-                    <font size="8"/>
-                </textElement>
-                <textFieldExpression><![CDATA[$F{phone_color}]]></textFieldExpression>
-            </textField>
-            <staticText>
-                <reportElement x="10" y="92" width="206" height="8" uuid="b15"/>
-                <textElement>
-                    <font size="8" isBold="true"/>
-                </textElement>
-                <text><![CDATA[REPAIR DETAILS]]></text>
-            </staticText>
-            <staticText>
-                <reportElement x="10" y="102" width="45" height="9" uuid="b16"/>
-                <textElement>
-                    <font size="8"/>
-                </textElement>
-                <text><![CDATA[Type:]]></text>
-            </staticText>
-            <textField>
-                <reportElement x="60" y="102" width="156" height="9" uuid="b17"/>
-                <textElement>
-                    <font size="8"/>
-                </textElement>
-                <textFieldExpression><![CDATA[$F{repair_type}]]></textFieldExpression>
-            </textField>
-            <line>
-                <reportElement x="5" y="143" width="216" height="1" uuid="b18"/>
-            </line>
-            <staticText>
-                <reportElement x="10" y="147" width="70" height="10" uuid="b19"/>
-                <textElement>
-                    <font size="9" isBold="true"/>
-                </textElement>
-                <text><![CDATA[Total Due:]]></text>
-            </staticText>
-            <textField>
-                <reportElement x="85" y="147" width="131" height="10" uuid="b20"/>
-                <textElement textAlignment="Right">
-                    <font size="9" isBold="true"/>
-                </textElement>
-                <textFieldExpression><![CDATA[String.format("%.0f", $F{agreed_amount}) + " UGX"]]></textFieldExpression>
-            </textField>
-            <staticText>
-                <reportElement x="10" y="159" width="70" height="9" uuid="b21"/>
-                <textElement>
-                    <font size="8"/>
-                </textElement>
-                <text><![CDATA[Paid:]]></text>
-            </staticText>
-            <textField>
-                <reportElement x="85" y="159" width="131" height="9" uuid="b22"/>
-                <textElement textAlignment="Right">
-                    <font size="8"/>
-                </textElement>
-                <textFieldExpression><![CDATA[String.format("%.0f", $F{amount_paid}) + " UGX"]]></textFieldExpression>
-            </textField>
-            <staticText>
-                <reportElement x="10" y="170" width="70" height="9" uuid="b23"/>
-                <textElement>
-                    <font size="8"/>
-                </textElement>
-                <text><![CDATA[Balance:]]></text>
-            </staticText>
-            <textField>
-                <reportElement x="85" y="170" width="131" height="9" uuid="b24"/>
-                <textElement textAlignment="Right">
-                    <font size="8"/>
-                </textElement>
-                <textFieldExpression><![CDATA[String.format("%.0f", $F{balance_due}) + " UGX"]]></textFieldExpression>
-            </textField>
-            <staticText>
-                <reportElement x="10" y="181" width="70" height="9" uuid="b25"/>
-                <textElement>
-                    <font size="8"/>
-                </textElement>
-                <text><![CDATA[Pay Status:]]></text>
-            </staticText>
-            <textField>
-                <reportElement x="85" y="181" width="131" height="9" uuid="b26"/>
-                <textElement>
-                    <font size="8"/>
-                </textElement>
-                <textFieldExpression><![CDATA[$F{payment_status}]]></textFieldExpression>
-            </textField>
-            <staticText>
-                <reportElement x="10" y="192" width="70" height="9" uuid="b27"/>
-                <textElement>
-                    <font size="8"/>
-                </textElement>
-                <text><![CDATA[Status:]]></text>
-            </staticText>
-            <textField>
-                <reportElement x="85" y="192" width="131" height="9" uuid="b28"/>
-                <textElement>
-                    <font size="8"/>
-                </textElement>
-                <textFieldExpression><![CDATA[$F{status}]]></textFieldExpression>
-            </textField>
-            <staticText>
-                <reportElement x="10" y="203" width="70" height="9" uuid="b29"/>
-                <textElement>
-                    <font size="8"/>
-                </textElement>
-                <text><![CDATA[Date Received:]]></text>
-            </staticText>
-            <textField>
-                <reportElement x="85" y="203" width="131" height="9" uuid="b30"/>
-                <textElement>
-                    <font size="8"/>
-                </textElement>
-                <textFieldExpression><![CDATA[new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm").format($F{date_received})]]></textFieldExpression>
-            </textField>
-        </band>
-    </detail>
-    <columnFooter>
-        <band splitType="Stretch"/>
-    </columnFooter>
-    <pageFooter>
-        <band splitType="Stretch"/>
-    </pageFooter>
-    <summary>
-        <band height="130" splitType="Stretch">
-            <line>
-                <reportElement x="5" y="5" width="216" height="1" uuid="c1"/>
-            </line>
-            <staticText>
-                <reportElement x="10" y="10" width="206" height="20" uuid="c2"/>
-                <textElement textAlignment="Center">
-                    <font size="8"/>
-                </textElement>
-                <text><![CDATA[IMPORTANT INFORMATION
+<!-- Created with Jaspersoft Studio version 7.0.6.final using JasperReports Library version 7.0.6-5d2a603fdc6b3db8f842a83383e594f41891534d  -->
+<jasperReport name="PhoneRepairReceipt" language="java" pageWidth="226" pageHeight="576" columnWidth="226" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="87a03fe7-2cec-4da2-b606-7052b667d200">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<parameter name="receipt_number" class="java.lang.String"/>
+	<query language="sql"><![CDATA[SELECT id, receipt_number, customer_name, customer_phone, phone_brand, phone_model, phone_color, repair_type, agreed_amount, amount_paid, balance_due, payment_status, date_received, status FROM phone_repairs WHERE receipt_number = $P{receipt_number}]]></query>
+	<field name="id" class="java.lang.Integer"/>
+	<field name="receipt_number" class="java.lang.String"/>
+	<field name="customer_name" class="java.lang.String"/>
+	<field name="customer_phone" class="java.lang.String"/>
+	<field name="phone_brand" class="java.lang.String"/>
+	<field name="phone_model" class="java.lang.String"/>
+	<field name="phone_color" class="java.lang.String"/>
+	<field name="repair_type" class="java.lang.String"/>
+	<field name="agreed_amount" class="java.lang.Double"/>
+	<field name="amount_paid" class="java.lang.Double"/>
+	<field name="balance_due" class="java.lang.Double"/>
+	<field name="payment_status" class="java.lang.String"/>
+	<field name="date_received" class="java.sql.Timestamp"/>
+	<field name="status" class="java.lang.String"/>
+	<background splitType="Stretch"/>
+	<title height="85" splitType="Stretch">
+		<element kind="staticText" uuid="c3c23877-0909-477b-8ea0-00124e527895" x="10" y="5" width="206" height="18" fontSize="13.0" bold="true" hTextAlign="Center">
+			<text><![CDATA[KEBZ PHONE SERVICE CENTRE]]></text>
+		</element>
+		<element kind="staticText" uuid="dc8ccd0d-e594-4129-8cf2-696ff662aac3" x="10" y="23" width="206" height="18" fontSize="8.0" hTextAlign="Center">
+			<text><![CDATA[Professional Device Repair Services]]></text>
+		</element>
+		<element kind="staticText" uuid="894c27d4-df08-40d8-9a27-1fbbcf2e889b" x="10" y="33" width="206" height="18" fontSize="8.0" hTextAlign="Center">
+			<text><![CDATA[Kiteezi]]></text>
+		</element>
+		<element kind="staticText" uuid="0347ce10-9096-4d29-b043-ddb5e30d83b5" x="10" y="42" width="206" height="15" fontSize="8.0" hTextAlign="Center">
+			<text><![CDATA[+256 741419436]]></text>
+		</element>
+		<element kind="line" uuid="7fee1e79-7d13-4e3d-991b-e80d0a70a8f1" x="5" y="53" width="216" height="1">
+			<pen lineWidth="0.5" lineStyle="Dashed"/>
+		</element>
+		<element kind="staticText" uuid="80ff99cd-24d3-42a0-a0d9-90c9b8708c82" x="65" y="58" width="96" height="14" fontSize="11.0" bold="true" hTextAlign="Center">
+			<text><![CDATA[REPAIR RECEIPT]]></text>
+		</element>
+		<element kind="line" uuid="78b9b97c-5379-40b9-85e1-ed994d7dfe28" x="5" y="73" width="216" height="1">
+			<pen lineWidth="0.5" lineStyle="Dashed"/>
+		</element>
+	</title>
+	<pageHeader splitType="Stretch"/>
+	<detail>
+		<band height="220" splitType="Stretch">
+			<element kind="staticText" uuid="8d7b435f-448a-45eb-8333-a05f5f2520dc" x="10" y="5" width="70" height="12" fontSize="8.0" bold="true">
+				<text><![CDATA[Receipt #]]></text>
+			</element>
+			<element kind="textField" uuid="7fdba7ca-ebdc-4adc-9431-d3d6e9bf0466" x="85" y="5" width="131" height="12" fontSize="9.0" bold="true" hTextAlign="Right">
+				<expression><![CDATA[$F{receipt_number}]]></expression>
+			</element>
+			<element kind="staticText" uuid="5ea13d10-d8a1-4c79-9e90-48e2a566c6fc" x="10" y="18" width="206" height="18" fontSize="8.0" bold="true">
+				<text><![CDATA[CUSTOMER INFORMATION]]></text>
+			</element>
+			<element kind="staticText" uuid="e579fb27-246c-4d62-949e-83171ae3a6b1" x="10" y="28" width="45" height="18" fontSize="8.0">
+				<text><![CDATA[Name:]]></text>
+			</element>
+			<element kind="textField" uuid="137bfc30-104e-407e-b9b4-f3d92174ee17" x="60" y="28" width="156" height="18" fontSize="8.0" hTextAlign="Right">
+				<expression><![CDATA[$F{customer_name}]]></expression>
+			</element>
+			<element kind="staticText" uuid="c2b6c4b2-d5e9-422a-bedd-8314d4b3bb66" x="10" y="38" width="45" height="19" fontSize="8.0">
+				<text><![CDATA[Phone:]]></text>
+			</element>
+			<element kind="textField" uuid="228af45d-aba7-424d-9664-10cec5707050" x="60" y="38" width="156" height="19" fontSize="8.0" hTextAlign="Right">
+				<expression><![CDATA[$F{customer_phone}]]></expression>
+			</element>
+			<element kind="staticText" uuid="1e61be11-e0dc-4096-970b-9381ffa89be5" x="10" y="50" width="206" height="18" fontSize="8.0" bold="true">
+				<text><![CDATA[DEVICE INFORMATION]]></text>
+			</element>
+			<element kind="staticText" uuid="c533d5c6-45d3-4349-b9ca-e5662c6c7cf5" x="10" y="60" width="45" height="18" fontSize="8.0">
+				<text><![CDATA[Brand:]]></text>
+			</element>
+			<element kind="textField" uuid="d68c7cd0-d537-4b7d-8877-e93a478e77ea" x="60" y="60" width="156" height="18" fontSize="8.0" hTextAlign="Right">
+				<expression><![CDATA[$F{phone_brand}]]></expression>
+			</element>
+			<element kind="staticText" uuid="00d7353b-e5d9-4a7f-903d-26b27a3b7848" x="10" y="70" width="45" height="18" fontSize="8.0">
+				<text><![CDATA[Model:]]></text>
+			</element>
+			<element kind="textField" uuid="5b7d9d68-1c4e-4587-b274-1bc79bbd3388" x="60" y="70" width="156" height="18" fontSize="8.0" hTextAlign="Right">
+				<expression><![CDATA[$F{phone_model}]]></expression>
+			</element>
+			<element kind="staticText" uuid="41957ff1-70ef-413b-8fa8-b87f547f2f16" x="10" y="80" width="45" height="11" fontSize="8.0">
+				<text><![CDATA[Color:]]></text>
+			</element>
+			<element kind="textField" uuid="0538818f-db5a-4619-9246-da0fc5b1ac92" x="60" y="80" width="156" height="11" fontSize="8.0" hTextAlign="Right">
+				<expression><![CDATA[$F{phone_color}]]></expression>
+			</element>
+			<element kind="staticText" uuid="f35117f1-fc33-41fa-a6aa-b8897eb13fd0" x="10" y="92" width="206" height="18" fontSize="8.0" bold="true">
+				<text><![CDATA[REPAIR DETAILS]]></text>
+			</element>
+			<element kind="staticText" uuid="d6612e02-5020-41c7-ae77-19d17052930e" x="10" y="102" width="45" height="18" fontSize="8.0">
+				<text><![CDATA[Type:]]></text>
+			</element>
+			<element kind="textField" uuid="43dc6055-00c4-4a51-8f10-1a05027a76f4" x="60" y="102" width="156" height="18" fontSize="8.0" hTextAlign="Right">
+				<expression><![CDATA[$F{repair_type}]]></expression>
+			</element>
+			<element kind="line" uuid="3a9f31a9-c0a7-4d5c-bde0-568c79573590" x="5" y="143" width="216" height="1">
+				<pen lineWidth="0.5" lineStyle="Dashed"/>
+			</element>
+			<element kind="staticText" uuid="c989ac13-d880-4c09-bbc3-6e8a8d9a6106" x="10" y="147" width="70" height="20" fontSize="9.0" bold="true">
+				<text><![CDATA[Total Due:]]></text>
+			</element>
+			<element kind="textField" uuid="2c7ec319-c559-4e55-b598-11f524f59396" x="85" y="147" width="131" height="20" fontSize="9.0" bold="true" hTextAlign="Right">
+				<expression><![CDATA[String.format("%.0f", $F{agreed_amount}) + " UGX"]]></expression>
+			</element>
+			<element kind="staticText" uuid="da965d54-2379-4f9b-b72b-e9d84cbee91b" x="10" y="159" width="70" height="19" fontSize="8.0">
+				<text><![CDATA[Paid:]]></text>
+			</element>
+			<element kind="textField" uuid="6380eb0a-d4a3-409f-9e93-39c8822439f4" x="85" y="159" width="131" height="19" fontSize="8.0" hTextAlign="Right">
+				<expression><![CDATA[String.format("%.0f", $F{amount_paid}) + " UGX"]]></expression>
+			</element>
+			<element kind="staticText" uuid="8456eb9a-4ce9-4f30-a9c0-3eea2130d3e6" x="10" y="170" width="70" height="19" fontSize="8.0">
+				<text><![CDATA[Balance:]]></text>
+			</element>
+			<element kind="textField" uuid="5f629dcc-0252-4791-bbb4-a0c9194c1f27" x="85" y="170" width="131" height="19" fontSize="8.0" hTextAlign="Right">
+				<expression><![CDATA[String.format("%.0f", $F{balance_due}) + " UGX"]]></expression>
+			</element>
+			<element kind="staticText" uuid="e383d057-c5ea-4361-b7e9-6e3cf035273a" x="10" y="181" width="70" height="19" fontSize="8.0">
+				<text><![CDATA[Pay Status:]]></text>
+			</element>
+			<element kind="textField" uuid="c9ec1c9b-9172-4cf0-a642-af83214dcfca" x="85" y="181" width="131" height="19" fontSize="8.0" hTextAlign="Right">
+				<expression><![CDATA[$F{payment_status}]]></expression>
+			</element>
+			<element kind="staticText" uuid="88bad3ef-9946-4fc7-9d9b-e97db3033723" x="10" y="192" width="70" height="19" fontSize="8.0">
+				<text><![CDATA[Status:]]></text>
+			</element>
+			<element kind="textField" uuid="e10e63c7-7c2a-4dd2-9e9d-a9eb43a4dab0" x="85" y="192" width="131" height="19" fontSize="8.0" hTextAlign="Right">
+				<expression><![CDATA[$F{status}]]></expression>
+			</element>
+			<element kind="staticText" uuid="cca0a24c-0163-49af-a0ac-477beccc9420" x="10" y="203" width="70" height="17" fontSize="8.0">
+				<text><![CDATA[Date Received:]]></text>
+			</element>
+			<element kind="textField" uuid="1669c6b5-ced0-46cf-8da8-111b0aef85ec" x="85" y="203" width="131" height="17" fontSize="8.0" hTextAlign="Right">
+				<expression><![CDATA[new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm").format($F{date_received})]]></expression>
+			</element>
+		</band>
+	</detail>
+	<columnFooter splitType="Stretch"/>
+	<pageFooter splitType="Stretch"/>
+	<summary height="172" splitType="Stretch">
+		<element kind="line" uuid="c6789806-1ad7-497e-ad96-9eb904003ad7" x="5" y="5" width="216" height="1">
+			<pen lineWidth="0.5" lineStyle="Dashed"/>
+		</element>
+		<element kind="staticText" uuid="ebf694b6-6b8a-4daf-a843-4ae6b934e706" x="10" y="10" width="206" height="20" fontSize="8.0" hTextAlign="Center">
+			<text><![CDATA[IMPORTANT INFORMATION
 - Bring this receipt when collecting your device
 - Keep in a safe place for reference
 - Contact us if you have any questions]]></text>
-            </staticText>
-            <line>
-                <reportElement x="5" y="32" width="216" height="1" uuid="c3"/>
-            </line>
-            <staticText>
-                <reportElement x="10" y="38" width="206" height="30" uuid="c4"/>
-                <textElement textAlignment="Center">
-                    <font size="7" isItalic="true"/>
-                </textElement>
-                <text><![CDATA[Thank you for choosing KEBZ PHONE SERVICE CENTRE!
+		</element>
+		<element kind="line" uuid="8a778cdc-ab0c-4318-961d-14f6584b3fbf" x="5" y="32" width="216" height="1">
+			<pen lineWidth="0.5" lineStyle="Dashed"/>
+		</element>
+		<element kind="staticText" uuid="37238867-03c9-4222-b06f-dbb39ca723ec" x="10" y="38" width="206" height="30" fontSize="7.0" italic="true" hTextAlign="Center">
+			<text><![CDATA[Thank you for choosing KEBZ PHONE SERVICE CENTRE!
 
 We are committed to providing excellent service and quality repairs.
 For support, visit us or call +256 741419436]]></text>
-            </staticText>
-            <textField>
-                <reportElement x="10" y="70" width="206" height="8" uuid="c5"/>
-                <textElement textAlignment="Center">
-                    <font size="7"/>
-                </textElement>
-                <textFieldExpression><![CDATA["Printed on: " + new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm").format(new java.util.Date())]]></textFieldExpression>
-            </textField>
-            <line>
-                <reportElement x="5" y="82" width="216" height="1" uuid="c6"/>
-            </line>
-        </band>
-    </summary>
+		</element>
+		<element kind="textField" uuid="a927c4e0-006b-4e40-b514-8c0e44b1343e" x="10" y="70" width="206" height="20" fontSize="7.0" hTextAlign="Center">
+			<expression><![CDATA["Printed on: " + new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm").format(new java.util.Date())]]></expression>
+		</element>
+		<element kind="line" uuid="553d83f8-97bf-41d5-8109-b0de453713db" x="5" y="89" width="216" height="1">
+			<pen lineWidth="0.5" lineStyle="Dashed"/>
+		</element>
+		<element kind="staticText" uuid="ecb70054-6fb9-4077-84b8-eb075ec42b16" x="78" y="95" width="66" height="20" fontSize="7.0">
+			<text><![CDATA[Powered by Necxtek]]></text>
+		</element>
+		<element kind="staticText" uuid="d8242309-87a0-4b50-8410-43989aefc784" x="83" y="107" width="56" height="16" fontSize="7.0">
+			<text><![CDATA[Tel: 0754815153]]></text>
+		</element>
+		<element kind="staticText" uuid="94ea29c9-f40c-4cdd-b180-ebfa88a9c680" x="78" y="120" width="66" height="18" fontSize="7.0">
+			<text><![CDATA[necxtek@gmail.com]]></text>
+		</element>
+	</summary>
 </jasperReport>
