@@ -207,10 +207,12 @@ public final class InvoiceTableParser {
         }
         int descriptionEnd = quantity.index;
         String warehouse = "";
-        while (descriptionEnd > descriptionStart
-                && WAREHOUSE_OR_UNIT.contains(normalize(tokens[descriptionEnd - 1]).toUpperCase(Locale.ROOT))) {
-            if (warehouse.isBlank()) warehouse = tokens[descriptionEnd - 1];
-            descriptionEnd--;
+        if (descriptionEnd > descriptionStart) {
+            String trailing = tokens[descriptionEnd - 1];
+            String normalizedTrailing = normalize(trailing).toUpperCase(Locale.ROOT);
+            if (WAREHOUSE_OR_UNIT.contains(normalizedTrailing) && !looksLikeProductCode(trailing)) {
+                warehouse = trailing;
+            }
         }
         String description = join(tokens, descriptionStart, descriptionEnd);
         if (description.isBlank() || isHeaderLike(description) || isFooterLine(description)) {
@@ -241,10 +243,9 @@ public final class InvoiceTableParser {
         }
 
         BigDecimal totalValue = lineTotal == null || lineTotal.value == null ? null : lineTotal.value;
-        if (totalValue == null && quantity != null && quantity.value != null && unitCost != null && unitCost.value != null) {
-            totalValue = quantity.value.multiply(unitCost.value);
-            warnings.add("Line total was missing and has been calculated.");
-            confidence -= 12;
+        if (lineTotal == null || lineTotal.value == null) {
+            warnings.add("Line total was missing; review the row before receiving stock.");
+            confidence -= 8;
         }
 
         InvoiceLineDraft initial = new InvoiceLineDraft(code, cleanDescription(description), warehouse, quantity == null ? null : quantity.value,
@@ -431,12 +432,10 @@ public final class InvoiceTableParser {
 
     private String cleanDescription(String description) {
         String cleaned = description == null ? "" : description.replaceAll("\\s+", " ").trim();
-        String[] tokens = cleaned.split(" ");
-        int end = tokens.length;
-        while (end > 1 && WAREHOUSE_OR_UNIT.contains(normalize(tokens[end - 1]).toUpperCase(Locale.ROOT))) {
-            end--;
+        if (cleaned.isBlank()) {
+            return "";
         }
-        return join(tokens, 0, end);
+        return cleaned.replaceAll("[\\p{Punct}&&[^/._-]]+$", "").trim();
     }
 
     private boolean isFooterLine(String line) {

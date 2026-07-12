@@ -46,6 +46,27 @@ class AzureInvoiceExtractionServiceTest {
     }
 
     @Test
+    void malformedAzureEndpointIsReportedAsConfigurationError() {
+        AzureInvoiceExtractionService service = new AzureInvoiceExtractionService(Map.of(
+                AzureInvoiceExtractionService.ENDPOINT_VARIABLE, "https://example.cognitiveservices.azure.com/",
+                AzureInvoiceExtractionService.KEY_VARIABLE, "demo-key"), new AzureInvoiceResultMapper());
+        InvoiceExtractionException safe = service.safeFailure(new IllegalArgumentException("The endpoint must be a valid HTTPS URL"));
+        assertEquals(InvoiceExtractionException.Reason.CONFIGURATION, safe.getReason());
+        assertTrue(safe.getMessage().contains("endpoint"));
+    }
+
+    @Test
+    void nettyLinkageErrorsAreReportedAsServiceFailureWithActionableMessage() {
+        AzureInvoiceExtractionService service = new AzureInvoiceExtractionService(Map.of(
+                AzureInvoiceExtractionService.ENDPOINT_VARIABLE, "https://example.cognitiveservices.azure.com/",
+                AzureInvoiceExtractionService.KEY_VARIABLE, "demo-key"), new AzureInvoiceResultMapper());
+        InvoiceExtractionException safe = service.safeFailure(new NoSuchMethodError(
+                "boolean io.netty.util.internal.PlatformDependent.isExplicitNoPreferDirect()"));
+        assertEquals(InvoiceExtractionException.Reason.SERVICE, safe.getReason());
+        assertTrue(safe.getMessage().contains("incompatible"));
+    }
+
+    @Test
     void loadsAzureConfigurationFromPropertiesFile() throws Exception {
         Path workingDir = temporary.resolve("workspace");
         Path homeDir = temporary.resolve("home");

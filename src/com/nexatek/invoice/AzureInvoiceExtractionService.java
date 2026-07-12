@@ -155,7 +155,7 @@ public final class AzureInvoiceExtractionService implements InvoiceExtractionSer
         } catch (IOException ex) {
             throw new InvoiceExtractionException(InvoiceExtractionException.Reason.INVALID_FILE,
                     "The selected invoice could not be opened safely.", ex);
-        } catch (RuntimeException ex) {
+        } catch (Throwable ex) {
             throw safeFailure(ex);
         } finally {
             activePoller.set(null);
@@ -237,6 +237,20 @@ public final class AzureInvoiceExtractionService implements InvoiceExtractionSer
             return new InvoiceExtractionException(InvoiceExtractionException.Reason.AUTHENTICATION,
                     "Azure rejected the Document Intelligence credentials. Verify the endpoint and key.");
         }
+        if (failure instanceof IllegalArgumentException || failure instanceof IllegalStateException) {
+            String detail = failure.getMessage();
+            String message = detail == null ? "" : detail.toLowerCase(Locale.ROOT);
+            if (message.contains("endpoint") || message.contains("url") || message.contains("https")) {
+                return new InvoiceExtractionException(InvoiceExtractionException.Reason.CONFIGURATION,
+                        "Azure Document Intelligence endpoint is invalid. Verify the endpoint and try again.");
+            }
+            if (message.contains("credential") || message.contains("key")) {
+                return new InvoiceExtractionException(InvoiceExtractionException.Reason.AUTHENTICATION,
+                        "Azure rejected the Document Intelligence credentials. Verify the endpoint and key.");
+            }
+            return new InvoiceExtractionException(InvoiceExtractionException.Reason.SERVICE,
+                    "Azure Document Intelligence could not complete the invoice analysis. Try again later.");
+        }
         if (responseFailure != null) {
             HttpResponseException responseException = responseFailure;
             int status = responseException.getResponse() == null ? 0 : responseException.getResponse().getStatusCode();
@@ -260,6 +274,13 @@ public final class AzureInvoiceExtractionService implements InvoiceExtractionSer
         if (current instanceof ConnectException || current instanceof java.net.UnknownHostException) {
             return new InvoiceExtractionException(InvoiceExtractionException.Reason.NETWORK,
                     "LuckyPOS could not reach Azure Document Intelligence. Check the internet connection and endpoint.");
+        }
+        String detail = failure == null ? null : failure.getMessage();
+        String trace = failure == null ? null : failure.toString();
+        if ((detail != null && detail.contains("NoSuchMethodError"))
+                || (trace != null && trace.contains("NoSuchMethodError"))) {
+            return new InvoiceExtractionException(InvoiceExtractionException.Reason.SERVICE,
+                    "Azure Document Intelligence could not start because the installed Java libraries are incompatible. Rebuild or restart LuckyPOS with the Azure SDK dependencies that match this project.");
         }
         return new InvoiceExtractionException(InvoiceExtractionException.Reason.SERVICE,
                 "Azure Document Intelligence could not complete the invoice analysis. Try again later.");
