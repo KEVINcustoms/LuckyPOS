@@ -79,7 +79,7 @@ class AzureInvoiceExtractionServiceTest {
 
         Map<String, String> resolved = AzureInvoiceExtractionService.runtimeConfiguration(Map.of(), Map.of(), workingDir, homeDir);
 
-        assertEquals("https://necxtek.cognitiveservices.azure.com/", resolved.get(AzureInvoiceExtractionService.ENDPOINT_VARIABLE));
-        assertEquals("7brcDFde34KNZFYbBPHK0yNsvOiHYYno2s46BW7Un1SNy2l7pGeRJQQJ99CGACYeBjFXJ3w3AAALACOGQCPA", resolved.get(AzureInvoiceExtractionService.KEY_VARIABLE));
+        assertEquals("https://example.cognitiveservices.azure.com/", resolved.get(AzureInvoiceExtractionService.ENDPOINT_VARIABLE));
+        assertEquals("demo-key", resolved.get(AzureInvoiceExtractionService.KEY_VARIABLE));
     }
 }

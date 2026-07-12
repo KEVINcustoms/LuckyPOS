@@ -19,6 +19,7 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -32,6 +33,7 @@ public final class AzureInvoiceExtractionService implements InvoiceExtractionSer
 
     public static final String ENDPOINT_VARIABLE = "AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT";
     public static final String KEY_VARIABLE = "AZURE_DOCUMENT_INTELLIGENCE_KEY";
+    public static final String BACKUP_KEY_VARIABLE = "AZURE_DOCUMENT_INTELLIGENCE_KEY_2";
     private static final String MODEL_ID = "prebuilt-invoice";
     private static final long MAX_FILE_BYTES = 50L * 1024L * 1024L;
     private static final Set<String> SUPPORTED_EXTENSIONS = Set.of("jpg", "jpeg", "png", "pdf");
@@ -46,7 +48,8 @@ public final class AzureInvoiceExtractionService implements InvoiceExtractionSer
 
     public static boolean isConfigured() {
         Map<String, String> values = runtimeConfiguration();
-        return present(values.get(ENDPOINT_VARIABLE)) && present(values.get(KEY_VARIABLE));
+        return present(values.get(ENDPOINT_VARIABLE))
+                && (present(values.get(KEY_VARIABLE)) || present(values.get(BACKUP_KEY_VARIABLE)));
     }
 
     AzureInvoiceExtractionService(Map<String, String> configuration, AzureInvoiceResultMapper mapper) {
@@ -55,14 +58,14 @@ public final class AzureInvoiceExtractionService implements InvoiceExtractionSer
     }
 
     private static Map<String, String> runtimeConfiguration() {
-        return runtimeConfiguration(System.getenv(), System.getProperties(), null, null);
+        return runtimeConfiguration(System.getenv(), System.getProperties(), Path.of(System.getProperty("user.dir", "")).toAbsolutePath().normalize(), Path.of(System.getProperty("user.home", "")).toAbsolutePath().normalize());
     }
 
     static Map<String, String> runtimeConfiguration(Map<String, String> environment,
             Map<Object, Object> systemProperties, Path workingDirectory, Path homeDirectory) {
         Map<String, String> values = new HashMap<>();
         if (environment != null) values.putAll(environment);
-        for (String name : List.of(ENDPOINT_VARIABLE, KEY_VARIABLE)) {
+        for (String name : List.of(ENDPOINT_VARIABLE, KEY_VARIABLE, BACKUP_KEY_VARIABLE)) {
             if (!present(values.get(name))) {
                 Object property = systemProperties == null ? null : systemProperties.get(name);
                 values.put(name, property == null ? null : String.valueOf(property));
@@ -75,7 +78,17 @@ public final class AzureInvoiceExtractionService implements InvoiceExtractionSer
     }
 
     private static String readPropertiesFile(String name, Path workingDirectory, Path homeDirectory) {
-        for (Path base : List.of(workingDirectory, homeDirectory, Path.of("."))) {
+        List<Path> bases = new ArrayList<>();
+        addBase(bases, workingDirectory);
+        addBase(bases, homeDirectory);
+        addBase(bases, Path.of(".").toAbsolutePath().normalize());
+        addBase(bases, Path.of(System.getProperty("user.dir", "")).toAbsolutePath().normalize());
+        Path current = Path.of(System.getProperty("user.dir", "")).toAbsolutePath().normalize();
+        for (int depth = 0; depth < 8 && current != null; depth++) {
+            addBase(bases, current);
+            current = current.getParent();
+        }
+        for (Path base : bases) {
             if (base == null) continue;
             Path candidate = base.resolve("luckypos.properties");
             if (!Files.isRegularFile(candidate)) continue;
@@ -89,6 +102,12 @@ public final class AzureInvoiceExtractionService implements InvoiceExtractionSer
             }
         }
         return null;
+    }
+
+    private static void addBase(List<Path> bases, Path base) {
+        if (base == null) return;
+        Path normalized = base.toAbsolutePath().normalize();
+        if (!bases.contains(normalized)) bases.add(normalized);
     }
 
     private static String readWindowsUserVariable(String name) {
@@ -119,12 +138,61 @@ public final class AzureInvoiceExtractionService implements InvoiceExtractionSer
     public ExtractedInvoice extract(Path document) throws InvoiceExtractionException {
         validateDocument(document);
         String endpoint = required(ENDPOINT_VARIABLE);
-        String key = required(KEY_VARIABLE);
         validateEndpoint(endpoint);
 
-        DocumentIntelligenceClient client;
+        List<String> candidateKeys = keysToTry();
+        InvoiceExtractionException lastError = null;
+        for (int index = 0; index < candidateKeys.size(); index++) {
+            String key = candidateKeys.get(index);
+            try {
+                DocumentIntelligenceClient client = buildClient(endpoint, key);
+                try (InputStream input = Files.newInputStream(document)) {
+                    BinaryData data = BinaryData.fromStream(input, Files.size(document));
+                    AnalyzeDocumentOptions options = new AnalyzeDocumentOptions(data);
+                    SyncPoller<AnalyzeOperationDetails, AnalyzeResult> poller = client
+                            .beginAnalyzeDocument(MODEL_ID, options)
+                            .setPollInterval(Duration.ofSeconds(2));
+                    activePoller.set(poller);
+                    AnalyzeResult result = poller.getFinalResult(Duration.ofMinutes(3));
+                    ExtractedInvoice invoice = mapper.map(result);
+                    invoice.setExtractionMethod("Azure Document Intelligence - prebuilt-invoice");
+                    invoice.setOriginalDocumentPath(document.toAbsolutePath().normalize());
+                    return invoice;
+                } catch (InvoiceExtractionException ex) {
+                    throw ex;
+                } catch (IOException ex) {
+                    throw new InvoiceExtractionException(InvoiceExtractionException.Reason.INVALID_FILE,
+                            "The selected invoice could not be opened safely.", ex);
+                } catch (Throwable ex) {
+                    InvoiceExtractionException converted = safeFailure(ex);
+                    if (index + 1 < candidateKeys.size()
+                            && converted.getReason() == InvoiceExtractionException.Reason.AUTHENTICATION) {
+                        lastError = converted;
+                        continue;
+                    }
+                    throw converted;
+                } finally {
+                    activePoller.set(null);
+                }
+            } catch (InvoiceExtractionException ex) {
+                lastError = ex;
+                if (index + 1 < candidateKeys.size() && ex.getReason() == InvoiceExtractionException.Reason.AUTHENTICATION) {
+                    continue;
+                }
+                throw ex;
+            }
+        }
+        if (lastError != null) {
+            throw lastError;
+        }
+        throw new InvoiceExtractionException(InvoiceExtractionException.Reason.CONFIGURATION,
+                "Azure invoice analysis is not configured. Set " + ENDPOINT_VARIABLE + " and " + KEY_VARIABLE
+                + " (or " + BACKUP_KEY_VARIABLE + "), then restart LuckyPOS.");
+    }
+
+    private DocumentIntelligenceClient buildClient(String endpoint, String key) throws InvoiceExtractionException {
         try {
-            client = new DocumentIntelligenceClientBuilder()
+            return new DocumentIntelligenceClientBuilder()
                     .endpoint(endpoint)
                     .credential(new AzureKeyCredential(key))
                     .httpClient(new NettyAsyncHttpClientBuilder()
@@ -137,29 +205,20 @@ public final class AzureInvoiceExtractionService implements InvoiceExtractionSer
         } catch (RuntimeException ex) {
             throw safeFailure(ex);
         }
+    }
 
-        try (InputStream input = Files.newInputStream(document)) {
-            BinaryData data = BinaryData.fromStream(input, Files.size(document));
-            AnalyzeDocumentOptions options = new AnalyzeDocumentOptions(data);
-            SyncPoller<AnalyzeOperationDetails, AnalyzeResult> poller = client
-                    .beginAnalyzeDocument(MODEL_ID, options)
-                    .setPollInterval(Duration.ofSeconds(2));
-            activePoller.set(poller);
-            AnalyzeResult result = poller.getFinalResult(Duration.ofMinutes(3));
-            ExtractedInvoice invoice = mapper.map(result);
-            invoice.setExtractionMethod("Azure Document Intelligence - prebuilt-invoice");
-            invoice.setOriginalDocumentPath(document.toAbsolutePath().normalize());
-            return invoice;
-        } catch (InvoiceExtractionException ex) {
-            throw ex;
-        } catch (IOException ex) {
-            throw new InvoiceExtractionException(InvoiceExtractionException.Reason.INVALID_FILE,
-                    "The selected invoice could not be opened safely.", ex);
-        } catch (Throwable ex) {
-            throw safeFailure(ex);
-        } finally {
-            activePoller.set(null);
+    private List<String> keysToTry() throws InvoiceExtractionException {
+        List<String> candidates = new ArrayList<>();
+        String primaryKey = configuration.get(KEY_VARIABLE);
+        if (present(primaryKey)) candidates.add(primaryKey.trim());
+        String backupKey = configuration.get(BACKUP_KEY_VARIABLE);
+        if (present(backupKey)) candidates.add(backupKey.trim());
+        if (candidates.isEmpty()) {
+            throw new InvoiceExtractionException(InvoiceExtractionException.Reason.CONFIGURATION,
+                    "Azure invoice analysis is not configured. Set " + KEY_VARIABLE + " (or " + BACKUP_KEY_VARIABLE
+                    + "), then restart LuckyPOS.");
         }
+        return candidates;
     }
 
     @Override
